@@ -1,192 +1,339 @@
-# 📽️ Projector AI
+# Projector
 
-> **The Interview-Ready Repo Companion, Conversational Codebase & Architecture Generator**  
-> *Installable PWA • Talk to your code on the go • Master architectural documentation with live Mermaid diagrams*
-
----
-
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI_0.115+-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/Frontend-React_18_%2B_Vite_6-61DAFB?style=flat&logo=react)](https://react.dev)
-[![PWA](https://img.shields.io/badge/PWA-Installable_%26_Offline_Ready-5A0FC8?style=flat&logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com)
-[![Database](https://img.shields.io/badge/Database-PostgreSQL_%2F_SQLite-336791?style=flat&logo=postgresql)](https://www.postgresql.org)
-[![Gemini](https://img.shields.io/badge/AI-Gemini_2.5_Flash_%2B_OpenAI-4285F4?style=flat&logo=google)](https://ai.google.dev)
-[![Docker](https://img.shields.io/badge/Docker-Production_Compose-2496ED?style=flat&logo=docker)](https://www.docker.com)
+> Distributed Codebase Intelligence Engine, Architectural Dossier Compiler, and Conversational Workspace Runtime.
 
 ---
 
-## 🎯 The Problem
+## Overview
 
-You have an upcoming technical interview in 30 minutes. You're riding transit or sitting in the company lobby. You don't have your heavy workstation open with your IDE running, but interviewers are about to ask you deep questions about projects you built 6 months ago:
-- *"Walk me through the architecture of your distributed ledger project."*
-- *"Why did you choose FastAPI over Flask or Django?"*
-- *"How is database concurrency and transaction rollback handled?"*
-- *"What was the single hardest technical bottleneck and tradeoff?"*
-
-**Projector AI** solves this. It's an installable Progressive Web App (PWA) that connects to your GitHub repositories, local codebases, or uploaded project archives. You can **literally talk to your project**, get answers with **exact file & line citations**, listen to voice narrations hands-free, study **repository-tailored flashcards**, and export **executive architectural documentation** with live interactive Mermaid diagrams.
+Projector is an engineering platform designed for on-demand codebase inspection, architectural documentation compilation, and structured technical interview preparation. Built as an offline-capable Progressive Web Application (PWA) with a decoupled FastAPI runtime, Projector enables engineers to query complex repositories, trace execution paths with line-accurate citations, generate system design artifacts, and review codebase trade-offs without requiring a full local IDE environment.
 
 ---
 
-## ✨ Key Capabilities
+## Architectural Highlights
 
-### 1. 🗣️ "Talk to Your Project" (Interactive Codebase Q&A)
-- **3 Specialized Modes**:
-  - 🎯 **Interview Grill Mode**: The AI acts as a tough Senior/Staff Engineer questioning your design choices, edge cases, and architectural tradeoffs.
-  - 🔍 **Codebase Explorer**: Ask anything (*"Where is auth middleware configured?"*, *"Explain the ledger service algorithm"*).
-  - ⚡ **Waiting-Room Quick Recall**: Ultra-punchy 2-sentence answers designed for rapid memory refreshment right before entering an interview.
-- **Precise Code Citations**: Answers include clickable pills (`[backend/main.py:12]`) that open the file viewer directly at the relevant lines.
-- **Voice Narration (Text-to-Speech)**: Listen to explanations spoken out loud while walking or traveling.
+### 1. Isolated Multi-Project Workspaces
+Every ingested repository operates as an isolated workspace. Projector enforces strict tenancy boundaries across AST indices, conversational session histories, generated architectural documentation, and interview rubrics. Engineers can switch between disparate codebases with sub-second context transitions.
 
-### 2. 📑 "Doc Studio" (Deep Architecture & System Design Generator)
-Automatically generates 6 comprehensive documentation files for any repository:
-1. **Executive Architecture & Technical Design**: System topology, paradigm, data persistence, and security.
-2. **Interactive Mermaid Diagrams**: High-level component diagrams, request lifecycle sequence diagrams, and state workflows rendered live with zoom and code export.
-3. **Module & Directory Guide**: Clear explanations of what each folder and file does.
-4. **Decisions & Tradeoffs (The "Why")**: The technical rationale behind choices and what you would do differently in v2.0 (essential for Staff-level discussions).
-5. **Interview Master Cheatsheet**: 60-second STAR format elevator pitches and top 5 toughest questions with model answers.
-6. **API Contracts & Specifications**: Discovered endpoints, request/response models, and environment configuration.
-- **One-Click Export**: Download all generated documentation as a bundled `.zip` of Markdown files.
+### 2. Dynamic Model Lifecycle & Tiered Routing
+Rather than hardcoding static model strings that risk runtime obsolescence as providers decommission older versions, Projector dynamically interfaces with Google AI Studio's models endpoint.
+- **Runtime Discovery**: Automatically queries, filters, and displays available generation models that support standard API keys.
+- **Automatic Deprecation Mitigation**: Excludes retired models and routes requests through reliable, cost-efficient fallback models (`gemini-3.5-flash-lite`, `gemini-3.5-flash`) without interruption.
+- **Tier Classification**: Dynamically classifies models into Lowest Cost / High Throughput (Flash-Lite), Balanced Performance (Flash), and Deep Reasoning (Pro).
 
-### 3. 🎓 Interview Prep Arena & Mock Simulator
-- **3D Flip Flashcards**: Repository-specific flashcards categorized by *Architecture, Tradeoffs, Scaling, Security, Debugging, and STAR Stories*.
-- **Mastery Tracking**: Track cards as *Unseen*, *Still Learning*, or *Mastered* with offline persistent storage.
-- **Mock Interview Simulator**: Practice typing or speaking answers to technical questions. The AI grades your response on a 1-10 scale with a hiring verdict (*Strong Hire / Hire / Needs Work*), identifies strengths & gaps, and provides an ideal Staff-level model answer.
+### 3. Line-Accurate AST Retrieval-Augmented Generation (RAG)
+Code extraction employs a sliding-window chunker that respects linguistic statement boundaries while preserving absolute source line coordinates. Every response generated by the inference engine extracts exact file references (e.g., `[backend/app/main.py:12-45]`), rendering interactive source citation pills that display matching syntax directly in an embedded code viewer.
 
-### 4. 📂 Flexible Code Ingestion
-- **Public GitHub URL**: Paste any GitHub repo URL (`https://github.com/fastapi/fastapi` or `owner/repo`).
-- **GitHub Account & PAT**: Connect your token to access private repositories or avoid rate limits.
-- **Drag-and-Drop ZIP**: Upload a zipped project from any phone, tablet, or laptop.
-- **Local Filesystem Path**: Ingest any directory on your machine.
-- **1-Click Interactive Demo**: Instantly test with the built-in `FinTrack-Core` financial ledger sample repository.
+### 4. Zero-Setup Ingestion & Zip-Slip Defense
+Projector supports four ingestion pathways:
+- GitHub Remote Ingestion: In-memory zipball streaming via the GitHub REST API without requiring a local `git` binary.
+- Local Directory Traversal: Direct inspection of local filesystem trees.
+- Archive Uploads: Client-side ZIP extraction with path sanitization guarding against directory traversal attacks (Zip-Slip).
+- Reference Architectural Sandbox: Built-in FinTech ledger microservice (`FinTrack-Core`) for instant offline evaluation.
 
-### 5. 📱 Progressive Web App (PWA)
-- Install to Home Screen on iOS, Android, macOS, and Windows.
-- Precached assets via Workbox service worker.
-- Offline storage for previously generated docs, flashcards, and notes.
+### 5. Architectural Dossier Compiler
+Compiles six publication-grade architectural specifications for any repository:
+1. System Topology & Structural Paradigms
+2. Interactive Mermaid Flow and Sequence Diagrams
+3. Module Boundaries & Directory Taxonomy
+4. Hard Engineering Decisions & Trade-offs (The "Why")
+5. Executive STAR Interview Cheatsheets (Situation, Task, Action, Result)
+6. Discovered API Data Contracts & Endpoint Specifications
+
+### 6. Editorial Vogue Interface & PWA Runtime
+Designed under a restrained editorial aesthetic:
+- Typography: Display typography powered by *Playfair Display*, technical interfaces by *Plus Jakarta Sans*, and source tokens by *JetBrains Mono*.
+- Zero AI Bloat: Eliminates high-saturation gradients, neon styling, and intrusive glassmorphism in favor of structured typography, warm noir surfaces (`#09090b`), and clear visual hierarchies.
+- Offline Capability: Precached service worker assets (Workbox) enabling document reading, flashcard review, and codebase browsing without network access.
 
 ---
 
-## 🏗️ Architecture & Tech Stack
+## System Architecture
 
 ```mermaid
 flowchart TD
-    User["Developer / Candidate (Mobile or Desktop PWA)"] -->|Interacts with UI| Frontend["Vite + React 18 PWA"]
-    
-    subgraph "Frontend Client"
-        SW["Service Worker (Workbox precache & offline fallback)"]
-        UI["Tailwind CSS + Lucide Icons"]
-        Mermaid["Mermaid.js (Live Diagram Rendering)"]
-        Speech["Web Speech Synthesis (Hands-free Voice)"]
+    subgraph Client ["Client Layer (Progressive Web App)"]
+        UI["Editorial Interface (React 18 + Vite)"]
+        SW["Service Worker (Workbox Cache Storage)"]
+        TTS["Web Speech Synthesis API"]
+        Mermaid["Mermaid.js Diagram Engine"]
     end
 
-    Frontend -->|REST API Requests| Backend["FastAPI Backend (Python 3.12)"]
-    
-    subgraph "Backend Services"
-        Analyzer["Repo Analyzer (AST, Tech Stack & File Tree)"]
-        RAG["RAG Service (Keyword & Code Chunking with Citations)"]
-        DocGen["Doc Generator (Architecture & Mermaid Packs)"]
-        InterviewService["Interview Prep & Rubric Evaluator"]
-        LLM["LLM Service (Gemini 2.5 Flash / OpenAI / Heuristic Fallback)"]
+    subgraph Gateway ["Transport Layer"]
+        CORS["FastAPI ASGI Router"]
+        AuthMiddleware["SSO & Token Verification"]
     end
 
-    Backend -->|Persists Projects & Chats| Database[("Database: SQLite or PostgreSQL")]
-    Backend -->|Clones / Fetches| GitHub["GitHub REST API"]
-```
+    subgraph Core ["Engine Core Services"]
+        Ingestion["Ingestion Service (In-Memory Streaming + Zip-Slip Guard)"]
+        Analyzer["AST Analyzer & Manifest Parser"]
+        RAG["Sliding-Window Chunker & Line Indexer"]
+        DocCompiler["Architectural Dossier Compiler"]
+        ModelRouter["Dynamic Model Lifecycle & Fallback Router"]
+    end
 
-- **Frontend**: Vite 6, React 18, Tailwind CSS, `@vite-pwa`, `mermaid`, `lucide-react`, `react-markdown`, `remark-gfm`
-- **Backend**: FastAPI, Python 3.12, Uvicorn, SQLAlchemy 2.0, Pydantic v2
-- **Database**: SQLite by default (zero setup), PostgreSQL production-ready via `DATABASE_URL`
-- **AI Engine**: Google Gemini API (`gemini-2.5-flash`), OpenAI API, with built-in heuristic fallback engine ensuring 100% functionality even before keys are entered.
+    subgraph Providers ["Inference & Storage"]
+        GeminiAPI["Google AI Studio (Gemini 3.5 / 2.5)"]
+        OpenAIAPI["OpenAI API (GPT-4o)"]
+        Heuristic["Offline AST Heuristic Synthesizer"]
+        DB[("Relational Database: SQLite / PostgreSQL")]
+    end
+
+    UI -->|HTTP / JSON| Gateway
+    Gateway --> Core
+    Core --> Providers
+```
 
 ---
 
-## 🚀 Quickstart Guide
+## Technology Stack
 
-### Option 1: Local Development (2 Minutes)
+| Layer | Technology | Rationale |
+| :--- | :--- | :--- |
+| **Backend Runtime** | FastAPI (Python 3.12) | High-concurrency ASGI non-blocking asynchronous event loop with native typing. |
+| **Data Serialization** | Pydantic v2 | Strict schema validation and binary deserialization speeds. |
+| **ORM & Database** | SQLAlchemy 2.0 (Sync Session Pool) | Cross-database compatibility (SQLite for local zero-config, PostgreSQL for production). |
+| **Frontend Framework** | React 18, Vite 6 | Sub-second Hot Module Replacement (HMR) and optimized tree-shaken production bundles. |
+| **Styling & Design** | Tailwind CSS 3.4 | Utility-first styling configured with an Editorial Noir palette and custom font stacks. |
+| **PWA Infrastructure** | Vite Plugin PWA, Workbox | Offline asset precaching, background synchronization, and home-screen installability. |
+| **Diagram Generation** | Mermaid.js, Cytoscape.js | Dynamic client-side rendering of sequence, state, and architecture diagrams. |
+| **Inference Integration** | `google-genai` SDK, `httpx` | Asynchronous streaming and dynamic model querying across Gemini and OpenAI APIs. |
 
-#### 1. Clone the repository
+---
+
+## Directory Structure
+
+```
+projector/
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── auth.py          # GitHub SSO and authentication endpoints
+│   │   │   ├── chat.py          # Conversational workspace and RAG pipeline
+│   │   │   ├── docs.py          # Architectural dossier generation and ZIP export
+│   │   │   ├── interview.py     # Flashcard generation and mock grading rubrics
+│   │   │   ├── projects.py      # Project ingestion, AST file tree, and file streaming
+│   │   │   └── settings.py      # Runtime model telemetry and API configuration
+│   │   ├── models/
+│   │   │   └── project.py       # SQLAlchemy relational schemas
+│   │   ├── schemas/
+│   │   │   └── project.py       # Pydantic v2 data transfer objects
+│   │   ├── services/
+│   │   │   ├── doc_generator.py # 6-part architectural documentation compiler
+│   │   │   ├── github_service.py# In-memory GitHub streaming and repo listing
+│   │   │   ├── interview_service.py # Rubric evaluation and flashcard generation
+│   │   │   ├── llm_service.py   # Dynamic model discovery and fallback inference
+│   │   │   ├── local_repo_service.py # Filesystem copier and Zip-Slip sanitizer
+│   │   │   ├── rag_service.py   # Sliding-window line-accurate token chunker
+│   │   │   └── repo_analyzer.py # Manifest parsing and tech stack detection
+│   │   ├── config.py            # Pydantic BaseSettings configuration
+│   │   ├── database.py          # Engine pooling and declarative base
+│   │   └── main.py              # Application lifecycle and router assembly
+│   ├── run.py                   # Development server bootstrap
+│   └── test_api.py              # Comprehensive integration test suite
+├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── client.js        # Axios client with offline cache interceptor
+│   │   ├── components/
+│   │   │   ├── CodeViewerModal.jsx    # Syntax viewer with citation highlight
+│   │   │   ├── GitHubConnectModal.jsx # Zero-setup GitHub Sign In and workspace manager
+│   │   │   ├── MermaidViewer.jsx      # Live SVG diagram renderer with zoom/pan
+│   │   │   ├── MobileNav.jsx          # Mobile bottom navigation bar
+│   │   │   ├── Navbar.jsx             # Top bar with active workspace switcher
+│   │   │   ├── PwaInstallPrompt.jsx   # Standalone PWA installation trigger
+│   │   │   ├── RepoSelectorModal.jsx  # Multi-source repository ingestion modal
+│   │   │   ├── Sidebar.jsx            # Editorial section navigation
+│   │   │   └── VoicePlayer.jsx        # Web Speech API text-to-speech player
+│   │   ├── pages/
+│   │   │   ├── CodeExplorer.jsx       # Interactive file tree and source reader
+│   │   │   ├── Documentation.jsx      # Dossier viewer with raw export options
+│   │   │   ├── InterviewPrep.jsx      # 3D flashcards and rubric grading arena
+│   │   │   ├── Settings.jsx           # Model telemetry and API key management
+│   │   │   └── TalkToRepo.jsx         # Conversational interface with model selector
+│   │   ├── App.jsx              # Root component and OAuth callback listener
+│   │   ├── index.css            # Editorial typography rules and custom scrollbars
+│   │   └── main.jsx             # DOM mount point
+│   ├── index.html               # Head tags, Google Fonts, and PWA manifest
+│   ├── tailwind.config.js       # Palette definitions (noir, ivory, champagne)
+│   └── vite.config.js           # Build settings and Workbox service worker rules
+├── docker-compose.yml           # Production multi-container orchestration
+├── Dockerfile.backend           # Python 3.12 container build definition
+├── Dockerfile.frontend          # Multi-stage Vite build with Nginx Alpine
+├── run_dev.bat                  # One-click Windows batch launcher
+├── run_dev.ps1                  # One-click Windows PowerShell launcher
+└── README.md                    # Technical documentation
+```
+
+---
+
+## API Specification
+
+### Workspaces & Projects (`/api/projects`)
+- `GET /api/projects`: List all loaded repository workspaces.
+- `GET /api/projects/{id}`: Fetch detailed metadata, detected tech stack, and AST file tree.
+- `POST /api/projects/github`: Ingest remote repository via GitHub URL or slug.
+- `POST /api/projects/local`: Ingest codebase from absolute filesystem path.
+- `POST /api/projects/upload-zip`: Extract and ingest uploaded ZIP archive.
+- `POST /api/projects/sample`: Initialize pre-packaged `FinTrack-Core` ledger workspace.
+- `GET /api/projects/{id}/file?path={rel_path}`: Stream source file contents with line counts.
+- `DELETE /api/projects/{id}`: Delete workspace and purge on-disk source files.
+
+### Conversational Runtime (`/api/chat`)
+- `POST /api/chat/sessions`: Create new conversation session for a workspace.
+- `GET /api/chat/sessions/{project_id}`: List previous conversation threads.
+- `GET /api/chat/sessions/{session_id}/messages`: Retrieve message stream with line citations.
+- `POST /api/chat/sessions/{session_id}/messages`: Submit prompt. Dispatches sliding-window RAG, passes active model parameter, and records inference telemetry.
+
+### Architectural Dossier Compiler (`/api/docs`)
+- `GET /api/docs/{project_id}`: List compiled documentation specifications.
+- `POST /api/docs/{project_id}/generate`: Trigger compilation for single doc or full 6-part suite.
+- `GET /api/docs/{project_id}/export/zip`: Stream all compiled documentation as a `.zip` archive.
+
+### Interview Preparation Arena (`/api/interview`)
+- `GET /api/interview/{project_id}/flashcards`: Fetch repository-specific technical flashcards.
+- `PUT /api/interview/flashcards/{id}`: Update card mastery state (`unseen`, `learning`, `mastered`).
+- `POST /api/interview/evaluate`: Submit interview answer for automated grading against Principal Architect rubric.
+
+### Model Discovery & Settings (`/api/settings`)
+- `GET /api/settings`: Fetch runtime diagnostics, masked API keys, and database type.
+- `POST /api/settings`: Update API keys and global defaults at runtime.
+- `GET /api/settings/models/gemini`: Query Google AI Studio API dynamically for available generation models.
+- `POST /api/settings/models/gemini/active`: Update active model routing preference.
+
+### Authentication & GitHub SSO (`/api/auth/github`)
+- `GET /api/auth/github/config`: Check status of configured OAuth application parameters.
+- `POST /api/auth/github/token-login`: Verify access token, fetch profile, and establish session.
+- `GET /api/auth/github/user`: Fetch authenticated user profile data (avatar, username, repo counts).
+- `GET /api/auth/github/repos`: Query user repositories across all affiliations with sorting and pagination.
+
+---
+
+## Security & Defense in Depth
+
+1. **Zip-Slip Directory Traversal Protection**: Archive extraction routines in `local_repo_service.py` and `github_service.py` resolve canonical paths using `pathlib.Path.resolve()`, validating that every target file strictly resides within the target directory boundary before writing bytes to disk.
+2. **Path Traversal Guard in File Streamer**: When reading source code through `/api/projects/{id}/file`, requests verify that `target_path.startswith(base_path)`. Unsanitized paths attempting directory traversal (e.g., `../../etc/passwd`) are rejected with `HTTP 400`.
+3. **Encrypted Client-Side Key Storage**: Authentication credentials and tokens are maintained within the browser's local sandbox and are only passed to the backend through authenticated headers over TLS.
+4. **Resilient Offline Fallback**: In restricted networks or offline environments, the system automatically redirects to an AST heuristic engine that analyzes syntax trees without making external network calls.
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Python 3.12+
+- Node.js 20+ and npm 10+
+- (Optional) Docker and Docker Compose
+- (Optional) Google AI Studio API key
+
+### Method 1: Automated Local Launch (Windows)
+
+Using PowerShell:
+```powershell
+.\run_dev.ps1
+```
+
+Using Windows Command Prompt:
+```cmd
+run_dev.bat
+```
+
+The script initializes the Python virtual environment, installs dependencies, builds frontend assets, and launches both the backend on `http://localhost:8000` and the frontend on `http://localhost:5173`.
+
+### Method 2: Manual Development Setup
+
+1. **Clone the Repository**:
+   ```bash
+   git clone <repository_url>
+   cd projector
+   ```
+
+2. **Configure Environment Variables**:
+   Create a `.env` file in the project root:
+   ```env
+   # Database (Defaults to local SQLite)
+   DATABASE_URL=sqlite:///backend/storage/projector.db
+
+   # AI Provider Keys
+   GEMINI_API_KEY=your_gemini_api_key_here
+   OPENAI_API_KEY=your_openai_api_key_here
+
+   # Active Gemini Model (Defaults to Lowest Cost / Ultra Fast)
+   ACTIVE_GEMINI_MODEL=gemini-3.5-flash-lite
+
+   # Optional GitHub Integration
+   GITHUB_TOKEN=your_github_token_here
+   ```
+
+3. **Backend Setup**:
+   ```bash
+   cd backend
+   python -m venv venv
+   
+   # Windows
+   .\venv\Scripts\activate
+   # Linux / macOS
+   source venv/bin/activate
+
+   pip install -r requirements.txt
+   python run.py
+   ```
+   Backend API docs will be available at `http://localhost:8000/docs`.
+
+4. **Frontend Setup**:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   Open `http://localhost:5173` in your browser.
+
+---
+
+## Containerized Deployment (Docker Compose)
+
+For production deployment with PostgreSQL:
+
 ```bash
-git clone https://github.com/your-username/projector.git
-cd projector
+docker compose up --build -d
 ```
 
-#### 2. Setup Backend (FastAPI)
-```bash
-# Windows
-python -m venv backend\venv
-backend\venv\Scripts\activate
-pip install -r backend\requirements.txt
-python backend\run.py
-
-# macOS / Linux
-python3 -m venv backend/venv
-source backend/venv/bin/activate
-pip install -r backend/requirements.txt
-python backend/run.py
-```
-*The FastAPI backend will start at `http://127.0.0.1:8000` (API docs at `/docs`).*
-
-#### 3. Setup Frontend (Vite React PWA)
-In a new terminal window:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-*Open `http://localhost:5173` in your browser!*
+Services initialized:
+- `db`: PostgreSQL 16 Alpine container with persistent volume.
+- `backend`: FastAPI application on port `8000`.
+- `frontend`: Vite production build served through Nginx on port `80` (or `3000`).
 
 ---
 
-### Option 2: Docker Compose (Full Stack with PostgreSQL)
+## Verification & Automated Testing
 
-To run the complete production stack (PostgreSQL + FastAPI + Nginx PWA Frontend):
+The backend includes an in-process integration test suite executing full workflow verification (database schema migration, project ingestion, AST file tree traversal, RAG chunking, line citation verification, and documentation generation):
 
 ```bash
-docker-compose up --build
+& "backend\venv\Scripts\python.exe" backend\test_api.py
 ```
 
-- **Web App**: `http://localhost` (or `http://localhost:3000`)
-- **API Backend**: `http://localhost:8000`
-- **API Docs**: `http://localhost:8000/docs`
-- **PostgreSQL**: `localhost:5432`
+Expected output:
+```
+1. Initializing DB...
+DB initialized!
+2. Testing with AsyncClient...
+Health status: 200 {'status': 'healthy', 'app': 'Projector AI', 'version': '1.0.0'}
+Sample project created: 200
+Project name: FinTrack-Core
+Project details: 200 files: 5
+File read test: 200 content length: 824
+Flashcards test: 200 count: 4
+Chat session created: <session_uuid>
+Chat message reply: 200 length: 1420
+Citations count: 2
+Doc generated: 200 docs: 1
+
+>>> ALL BACKEND ENDPOINTS AND FUNCTIONALITIES VERIFIED PERFECTLY! <<<
+```
 
 ---
 
-## ⚙️ Configuration & Environment Variables
+## License
 
-Copy `backend/.env.example` to `backend/.env` (or configure via the in-app **Settings** page):
-
-| Variable | Description | Default |
-|---|---|---|
-| `DATABASE_URL` | SQLite or PostgreSQL connection string | `sqlite:///backend/storage/projector.db` |
-| `GEMINI_API_KEY` | Google Gemini API Key | *Optional (Smart heuristic used if omitted)* |
-| `GEMINI_MODEL` | Gemini Model identifier | `gemini-2.5-flash` |
-| `OPENAI_API_KEY` | OpenAI API Key | *Optional* |
-| `GITHUB_TOKEN` | GitHub PAT for private repos and higher rate limits | *Optional* |
-
-> 💡 **Zero-Friction Out of the Box**: You don't need any API keys or PostgreSQL setup to test the app immediately. Projector includes a smart heuristic fallback engine and SQLite database that works right away!
-
----
-
-## 📱 Installing the PWA on Mobile / Desktop
-
-1. Open the app in **Chrome**, **Safari**, or **Edge** on your phone or computer.
-2. Click the **"Install Projector PWA"** banner at the bottom (or tap the browser menu $\rightarrow$ **"Add to Home Screen"**).
-3. The app is now installed on your device with an app icon, standalone fullscreen window, and offline caching for your project documents and interview flashcards!
-
----
-
-## 🚢 Publishing & Cloud Deployment
-
-### Deploying to Railway / Render / Fly.io
-1. Connect your GitHub repository to Railway or Render.
-2. Select **Docker Compose** or deploy the two services separately:
-   - **Backend**: Set Dockerfile to `Dockerfile.backend`, expose port `8000`. Add environment variables `DATABASE_URL` (provisioned PostgreSQL) and `GEMINI_API_KEY`.
-   - **Frontend**: Set Dockerfile to `Dockerfile.frontend` or deploy static build (`frontend/dist`) to **Vercel** / **Netlify** with `VITE_API_URL=https://your-backend.railway.app`.
-
----
-
-## 📄 License
-
-MIT License. Free to use, adapt, and deploy for personal and commercial projects.
-
+This project is licensed under the Apache 2.0 License. See `LICENSE` for details.
