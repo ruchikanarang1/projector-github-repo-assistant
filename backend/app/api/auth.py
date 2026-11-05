@@ -124,3 +124,4 @@ async def get_user_repositories(authorization: Optional[str] = Header(None), tok
         return await GitHubService.list_user_repos(active_token)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
