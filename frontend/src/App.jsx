@@ -12,7 +12,7 @@ import InterviewPrep from './pages/InterviewPrep';
 import CodeExplorer from './pages/CodeExplorer';
 import Settings from './pages/Settings';
 
-import { projectApi } from './api/client';
+import { projectApi, authApi } from './api/client';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('talk');
@@ -24,6 +24,23 @@ export default function App() {
 
   useEffect(() => {
     loadProjects();
+
+    // Check for GitHub OAuth callback code in URL
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      authApi.oauthCallback(code)
+        .then((res) => {
+          if (res.access_token) {
+            localStorage.setItem('projector_gh_token', res.access_token);
+            window.history.replaceState({}, document.title, window.location.pathname);
+            setIsGitHubModalOpen(true);
+          }
+        })
+        .catch((err) => {
+          console.error('OAuth callback error:', err);
+        });
+    }
   }, []);
 
   const loadProjects = async () => {
@@ -72,6 +89,8 @@ export default function App() {
       {/* Editorial Navbar */}
       <Navbar
         currentProject={currentProject}
+        projects={projects}
+        onSelectProject={handleSelectProject}
         onOpenRepoModal={() => setIsRepoModalOpen(true)}
         onOpenGitHubModal={() => setIsGitHubModalOpen(true)}
         onNavigate={(tab) => setActiveTab(tab)}
@@ -111,6 +130,8 @@ export default function App() {
       <GitHubConnectModal
         isOpen={isGitHubModalOpen}
         onClose={() => setIsGitHubModalOpen(false)}
+        projects={projects}
+        onSelectProject={handleSelectProject}
         onProjectImported={handleSelectProject}
       />
 

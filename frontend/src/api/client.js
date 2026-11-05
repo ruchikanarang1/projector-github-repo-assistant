@@ -7,6 +7,15 @@ const api = axios.create({
   timeout: 90000, // 90 seconds for large repo analysis / LLM synthesis
 });
 
+// Request interceptor to attach GitHub token if stored
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('projector_gh_token');
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Response interceptor to cache key data in localStorage for offline PWA
 api.interceptors.response.use(
   (response) => {
@@ -68,9 +77,21 @@ export const interviewApi = {
   evaluate: (data) => api.post('/api/interview/evaluate', data).then((res) => res.data),
 };
 
+export const authApi = {
+  getConfig: () => api.get('/api/auth/github/config').then((res) => res.data),
+  oauthCallback: (code) => api.post('/api/auth/github/callback', { code }).then((res) => res.data),
+  startDeviceFlow: () => api.post('/api/auth/github/device-code').then((res) => res.data),
+  pollDeviceFlow: (deviceCode) => api.post('/api/auth/github/device-poll', { device_code: deviceCode }).then((res) => res.data),
+  tokenLogin: (token) => api.post('/api/auth/github/token-login', { token }).then((res) => res.data),
+  getUser: () => api.get('/api/auth/github/user').then((res) => res.data),
+  getRepos: () => api.get('/api/auth/github/repos').then((res) => res.data),
+};
+
 export const settingsApi = {
   get: () => api.get('/api/settings').then((res) => res.data),
   update: (data) => api.post('/api/settings', data).then((res) => res.data),
+  getGeminiModels: () => api.get('/api/settings/models/gemini').then((res) => res.data),
+  setActiveGeminiModel: (modelId) => api.post('/api/settings/models/gemini/active', { model_id: modelId }).then((res) => res.data),
 };
 
 export default api;

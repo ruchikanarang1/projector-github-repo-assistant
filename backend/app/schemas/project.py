@@ -78,6 +78,7 @@ class ChatSessionResponse(BaseModel):
 class ChatMessageCreate(BaseModel):
     content: str
     mode: Optional[str] = None  # interview_coach, code_explorer, quick_recall
+    model: Optional[str] = None  # dynamic Gemini model name
 
 class ChatCitation(BaseModel):
     file: str
@@ -133,5 +134,37 @@ class SettingsConfig(BaseModel):
     gemini_api_key: Optional[str] = None
     openai_api_key: Optional[str] = None
     default_provider: Optional[str] = "gemini"
+    gemini_model: Optional[str] = None
     github_token: Optional[str] = None
+    github_client_id: Optional[str] = None
+    github_client_secret: Optional[str] = None
+
+# Gemini Dynamic Model Schemas
+class GeminiModelInfo(BaseModel):
+    id: str
+    display_name: str
+    description: Optional[str] = ""
+    tier: str  # "lowest_cost", "fast_efficient", "flagship_reasoning", "standard"
+    is_latest: bool = False
+    is_lowest_cost: bool = False
+    input_token_limit: Optional[int] = None
+    output_token_limit: Optional[int] = None
+
+class GeminiModelListResponse(BaseModel):
+    active_model: str
+    models: List[GeminiModelInfo]
+
+# GitHub SSO Schemas
+class GitHubOAuthCallbackRequest(BaseModel):
+    code: str
+
+class GitHubDeviceCodeResponse(BaseModel):
+    device_code: str
+    user_code: str
+    verification_uri: str
+    expires_in: int
+    interval: int
+
+class GitHubDevicePollRequest(BaseModel):
+    device_code: str
 

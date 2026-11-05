@@ -131,7 +131,9 @@ Instructions:
 Answer thoroughly. When referring to files, quote the file path (e.g. `[src/main.py]`). Be authoritative and provide concrete engineering explanations.
 """
 
-    reply_text, model_name = await LLMService.generate_response_with_meta(full_prompt, system_instruction=sys_prompt)
+    reply_text, model_name = await LLMService.generate_response_with_meta(
+        full_prompt, system_instruction=sys_prompt, model=data.model
+    )
 
     # Save Assistant Message
     assistant_msg = ChatMessage(

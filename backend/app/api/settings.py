@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional
 from backend.app.config import settings
+from backend.app.services.llm_service import LLMService
 
 router = APIRouter(prefix="/api/settings", tags=["Settings"])
 
@@ -52,5 +53,31 @@ async def update_system_settings(req: UpdateSettingsRequest):
         "message": "Settings updated successfully",
         "gemini_configured": bool(settings.GEMINI_API_KEY),
         "github_token_configured": bool(settings.GITHUB_TOKEN)
+    }
+
+@router.get("/models/gemini")
+async def get_dynamic_gemini_models():
+    """
+    Dynamically queries Google AI Studio API for current live, usable Gemini models.
+    Returns classified models (lowest cost, latest flagship, fast efficient).
+    """
+    models = await LLMService.fetch_available_gemini_models()
+    active = getattr(settings, "ACTIVE_GEMINI_MODEL", "gemini-2.5-flash")
+    return {
+        "active_model": active,
+        "models": models
+    }
+
+class SetActiveModelRequest(BaseModel):
+    model_id: str
+
+@router.post("/models/gemini/active")
+async def set_active_gemini_model(req: SetActiveModelRequest):
+    settings.ACTIVE_GEMINI_MODEL = req.model_id.strip()
+    settings.GEMINI_MODEL = req.model_id.strip()
+    return {
+        "status": "success",
+        "active_model": settings.ACTIVE_GEMINI_MODEL,
+        "message": f"Active model successfully updated to {settings.ACTIVE_GEMINI_MODEL}"
     }
 

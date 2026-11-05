@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.config import settings
 from backend.app.database import init_db
-from backend.app.api import projects, chat, docs, interview, settings as settings_api
+from backend.app.api import projects, chat, docs, interview, settings as settings_api, auth
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,6 +28,7 @@ app.add_middleware(
 )
 
 # Mount API Routers
+app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(chat.router)
 app.include_router(docs.router)

@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     
     # GitHub integration
     GITHUB_TOKEN: str = os.getenv("GITHUB_TOKEN", "")
+    GITHUB_CLIENT_ID: str = os.getenv("GITHUB_CLIENT_ID", "")
+    GITHUB_CLIENT_SECRET: str = os.getenv("GITHUB_CLIENT_SECRET", "")
+    GITHUB_REDIRECT_URI: str = os.getenv("GITHUB_REDIRECT_URI", "http://localhost:5173/auth/callback")
+    
+    # Active selected Gemini model
+    ACTIVE_GEMINI_MODEL: str = os.getenv("ACTIVE_GEMINI_MODEL", "gemini-2.5-flash")
     
     # Storage
     STORAGE_DIR: Path = STORAGE_DIR

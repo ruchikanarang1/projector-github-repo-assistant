@@ -17,15 +17,151 @@ class LLMService:
         return "mock"
 
     @staticmethod
+    def get_default_gemini_models() -> List[Dict[str, Any]]:
+        return [
+            {
+                "id": "gemini-3.5-flash-lite",
+                "display_name": "Gemini 3.5 Flash-Lite (Lowest Cost)",
+                "description": "Ultra low latency & lowest cost model for high throughput codebase recall",
+                "tier": "lowest_cost",
+                "is_latest": True,
+                "is_lowest_cost": True,
+                "input_token_limit": 1048576,
+                "output_token_limit": 8192
+            },
+            {
+                "id": "gemini-3.5-flash",
+                "display_name": "Gemini 3.5 Flash (Latest)",
+                "description": "Latest flagship multimodal and coding performance balanced with speed",
+                "tier": "fast_efficient",
+                "is_latest": True,
+                "is_lowest_cost": False,
+                "input_token_limit": 1048576,
+                "output_token_limit": 8192
+            },
+            {
+                "id": "gemini-2.5-flash",
+                "display_name": "Gemini 2.5 Flash",
+                "description": "High-speed established model with strong code analysis capabilities",
+                "tier": "fast_efficient",
+                "is_latest": False,
+                "is_lowest_cost": False,
+                "input_token_limit": 1048576,
+                "output_token_limit": 8192
+            },
+            {
+                "id": "gemini-flash-lite-latest",
+                "display_name": "Gemini Flash-Lite Latest (Lowest Cost)",
+                "description": "Always routes to Google's newest lowest-cost Gemini Flash-Lite version",
+                "tier": "lowest_cost",
+                "is_latest": True,
+                "is_lowest_cost": True,
+                "input_token_limit": 1048576,
+                "output_token_limit": 8192
+            }
+        ]
+
+    @staticmethod
+    async def fetch_available_gemini_models(custom_key: Optional[str] = None) -> List[Dict[str, Any]]:
+        gemini_key = custom_key or settings.GEMINI_API_KEY
+        if not gemini_key:
+            return LLMService.get_default_gemini_models()
+
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models?key={gemini_key}"
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(url)
+                if resp.status_code != 200:
+                    logger.warning(f"Failed to fetch Gemini models from Google AI Studio: HTTP {resp.status_code}. Using defaults.")
+                    return LLMService.get_default_gemini_models()
+
+                data = resp.json()
+                models_raw = data.get("models", [])
+                parsed_models = []
+                phased_out = {"gemini-2.5-pro", "gemini-2.5-flash-lite"}
+
+                for m in models_raw:
+                    name = m.get("name", "")
+                    clean_id = name.replace("models/", "")
+                    methods = m.get("supportedGenerationMethods", [])
+
+                    if "generateContent" not in methods:
+                        continue
+                    if not clean_id.startswith("gemini-"):
+                        continue
+                    if clean_id in phased_out:
+                        continue
+
+                    # Filter out non-text/chat specialized models
+                    excluded_tags = [
+                        "-tts", "-image", "banana", "robotics", "customtools", "computer-use", "transcribe"
+                    ]
+                    if any(tag in clean_id for tag in excluded_tags):
+                        continue
+
+                    tier = "standard"
+                    is_latest = False
+                    is_lowest_cost = False
+
+                    if "lite" in clean_id or "8b" in clean_id:
+                        tier = "lowest_cost"
+                        is_lowest_cost = True
+                    elif "pro" in clean_id:
+                        tier = "flagship_reasoning"
+                    elif "flash" in clean_id:
+                        tier = "fast_efficient"
+
+                    if "3.5" in clean_id or "latest" in clean_id:
+                        is_latest = True
+
+                    display_name = m.get("displayName") or clean_id
+                    if is_lowest_cost and "Lowest Cost" not in display_name:
+                        display_name = f"{display_name} (Lowest Cost)"
+                    elif is_latest and "Latest" not in display_name:
+                        display_name = f"{display_name} (Latest)"
+
+                    parsed_models.append({
+                        "id": clean_id,
+                        "display_name": display_name,
+                        "description": m.get("description", "Standard Google AI Studio model"),
+                        "tier": tier,
+                        "is_latest": is_latest,
+                        "is_lowest_cost": is_lowest_cost,
+                        "input_token_limit": m.get("inputTokenLimit"),
+                        "output_token_limit": m.get("outputTokenLimit"),
+                    })
+
+                # Sort models: newest/lowest-cost first
+                def sort_rank(mod):
+                    cid = mod["id"]
+                    score = 0
+                    if "3.5" in cid: score += 100
+                    elif "latest" in cid: score += 80
+                    elif "2.5" in cid: score += 60
+                    elif "2.0" in cid: score += 40
+                    elif "1.5" in cid: score += 20
+
+                    if mod["is_lowest_cost"]: score += 15
+                    elif mod["tier"] == "fast_efficient": score += 10
+                    return -score
+
+                parsed_models.sort(key=sort_rank)
+                return parsed_models if parsed_models else LLMService.get_default_gemini_models()
+        except Exception as e:
+            logger.error(f"Error fetching dynamic Gemini models: {e}")
+            return LLMService.get_default_gemini_models()
+
+    @staticmethod
     async def generate_response(
         prompt: str,
         system_instruction: Optional[str] = None,
         custom_gemini_key: Optional[str] = None,
         custom_openai_key: Optional[str] = None,
-        temperature: float = 0.4
+        temperature: float = 0.4,
+        model: Optional[str] = None
     ) -> str:
         text, _ = await LLMService.generate_response_with_meta(
-            prompt, system_instruction, custom_gemini_key, custom_openai_key, temperature
+            prompt, system_instruction, custom_gemini_key, custom_openai_key, temperature, model=model
         )
         return text
 
@@ -35,7 +171,8 @@ class LLMService:
         system_instruction: Optional[str] = None,
         custom_gemini_key: Optional[str] = None,
         custom_openai_key: Optional[str] = None,
-        temperature: float = 0.4
+        temperature: float = 0.4,
+        model: Optional[str] = None
     ) -> tuple[str, str]:
         """
         Generates content using Gemini, OpenAI, or smart Heuristic Fallback.
@@ -46,6 +183,7 @@ class LLMService:
 
         # 1. Try Gemini if key is provided
         if gemini_key:
+            target_model = model or getattr(settings, "ACTIVE_GEMINI_MODEL", None) or settings.GEMINI_MODEL
             try:
                 from google import genai
                 from google.genai import types
@@ -62,17 +200,36 @@ class LLMService:
                     loop.run_in_executor(
                         None,
                         lambda: client.models.generate_content(
-                            model=settings.GEMINI_MODEL,
+                            model=target_model,
                             contents=prompt,
                             config=config
                         )
                     ),
-                    timeout=10.0
+                    timeout=12.0
                 )
                 if response and response.text:
-                    return response.text, settings.GEMINI_MODEL
+                    return response.text, target_model
             except Exception as e:
-                logger.error(f"Gemini API error or timeout: {e}. Falling back to secondary/heuristic engine.")
+                logger.warning(f"Gemini API error with {target_model}: {e}. Retrying with reliable fallback...")
+                # Automatic model recovery: if target model failed (e.g. 404 retired), try gemini-2.5-flash or gemini-3.5-flash-lite
+                for fallback_model in ["gemini-2.5-flash", "gemini-3.5-flash-lite"]:
+                    if fallback_model != target_model:
+                        try:
+                            response = await asyncio.wait_for(
+                                loop.run_in_executor(
+                                    None,
+                                    lambda: client.models.generate_content(
+                                        model=fallback_model,
+                                        contents=prompt,
+                                        config=config
+                                    )
+                                ),
+                                timeout=10.0
+                            )
+                            if response and response.text:
+                                return response.text, fallback_model
+                        except Exception:
+                            continue
 
         # 2. Try OpenAI if key is provided
         if openai_key:

@@ -1,22 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import {
+  Send, Bot, User, Code, FileText, Check, Copy, ExternalLink,
+  Sparkles, RefreshCw, ChevronRight, Cpu, Layers, Terminal, BookOpen,
+  Search, ShieldAlert, Zap, FileCode, CheckCircle2, ChevronDown, Info, Loader2
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import {
-  Send,
-  Target,
-  Search,
-  Zap,
-  FileCode,
-  Copy,
-  Check,
-  RefreshCw,
-  Loader2,
-  ChevronRight,
-  Info,
-  Cpu,
-  Sparkles,
-  Layers
-} from 'lucide-react';
 import { chatApi, settingsApi } from '../api/client';
 import VoicePlayer from '../components/VoicePlayer';
 import CodeViewerModal from '../components/CodeViewerModal';
@@ -58,8 +47,12 @@ export default function TalkToRepo({ project }) {
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
 
-  // Active Model & Pipeline Explainer
-  const [activeModelName, setActiveModelName] = useState('Gemini 2.5 Flash');
+  // Dynamic Gemini Models state
+  const [geminiModels, setGeminiModels] = useState([]);
+  const [selectedModelId, setSelectedModelId] = useState('gemini-3.5-flash-lite');
+  const [activeModelName, setActiveModelName] = useState('Gemini 3.5 Flash-Lite (Lowest Cost)');
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [modelsLoading, setModelsLoading] = useState(false);
   const [showPipelineInfo, setShowPipelineInfo] = useState(false);
 
   // Citation inspection modal
@@ -67,22 +60,50 @@ export default function TalkToRepo({ project }) {
   const [inspectLines, setInspectLines] = useState(null);
 
   const messagesEndRef = useRef(null);
+  const modelMenuRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    settingsApi.get().then((cfg) => {
-      if (cfg.gemini_configured) {
-        setActiveModelName(cfg.gemini_model || 'Gemini 2.5 Flash');
-      } else if (cfg.openai_configured) {
-        setActiveModelName(cfg.openai_model || 'GPT-4o-mini');
-      } else {
-        setActiveModelName('Rule-Based AST Synthesizer (Zero-Key Mode)');
+    loadDynamicModels();
+
+    const handleClickOutside = (e) => {
+      if (modelMenuRef.current && !modelMenuRef.current.contains(e.target)) {
+        setIsModelDropdownOpen(false);
       }
-    }).catch(() => {});
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const loadDynamicModels = async () => {
+    setModelsLoading(true);
+    try {
+      const res = await settingsApi.getGeminiModels();
+      if (res && res.models && res.models.length > 0) {
+        setGeminiModels(res.models);
+        const activeId = res.active_model || res.models[0].id;
+        setSelectedModelId(activeId);
+        const found = res.models.find((m) => m.id === activeId);
+        if (found) {
+          setActiveModelName(found.display_name);
+        }
+      }
+    } catch (err) {
+      console.warn('Could not load dynamic models:', err);
+    } finally {
+      setModelsLoading(false);
+    }
+  };
+
+  const handleSelectModel = (modelObj) => {
+    setSelectedModelId(modelObj.id);
+    setActiveModelName(modelObj.display_name);
+    setIsModelDropdownOpen(false);
+    settingsApi.setActiveGeminiModel(modelObj.id).catch(() => {});
+  };
 
   useEffect(() => {
     if (!project?.id) return;
@@ -123,18 +144,20 @@ export default function TalkToRepo({ project }) {
       const assistantMsg = await chatApi.sendMessage(currentSession.id, {
         content: textToSend,
         mode: mode,
+        model: selectedModelId,
       });
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err) {
-      console.error('Chat error:', err);
+      console.error(err);
       setMessages((prev) => [
         ...prev,
         {
           id: `err-${Date.now()}`,
           role: 'assistant',
-          content: '⚠️ Failed to complete inference. Please verify network connectivity or API credentials in Settings.',
+          content: 'An error occurred while compiling this response. Please check your model configuration or network connection.',
           created_at: new Date().toISOString(),
-        },
+          model_used: selectedModelId
+        }
       ]);
     } finally {
       setLoading(false);
@@ -147,18 +170,20 @@ export default function TalkToRepo({ project }) {
     try {
       const sess = await chatApi.createSession({
         project_id: project.id,
-        title: `Dialogue — ${new Date().toLocaleDateString()}`,
-        mode: mode,
+        title: `Interview Prep - ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        mode
       });
       setCurrentSession(sess);
       setMessages([]);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCopyMessage = (id, content) => {
-    navigator.clipboard.writeText(content);
+  const handleCopyMessage = (id, text) => {
+    navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
@@ -170,19 +195,24 @@ export default function TalkToRepo({ project }) {
 
   if (!project) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center text-zinc-500 font-sans">
-        <h3 className="text-lg font-serif font-bold text-white mb-2">No Subject Selected</h3>
-        <p className="text-xs text-zinc-400 max-w-sm">Connect a GitHub repository or local folder above to begin conversational code exploration.</p>
+      <div className="h-full flex items-center justify-center p-8 text-center text-zinc-400 font-sans">
+        <div className="max-w-md space-y-3">
+          <Layers size={36} className="mx-auto text-zinc-600 mb-2" />
+          <h2 className="text-xl font-serif font-bold text-white">No Active Workspace Selected</h2>
+          <p className="text-sm text-zinc-400">
+            Please connect your GitHub account or select a repository from the top navigation to initialize a conversational workspace.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-[#09090b] overflow-hidden relative font-sans">
-      {/* Top Editorial Mode Bar */}
-      <div className="px-6 py-3 bg-[#0d0d11] border-b border-white/[0.08] flex items-center justify-between gap-4 flex-wrap">
+    <div className="h-full flex flex-col bg-[#09090b] text-zinc-200 overflow-hidden font-sans">
+      {/* Editorial Subheader & Controls */}
+      <div className="px-6 py-3 bg-[#0d0d10] border-b border-white/[0.08] flex flex-wrap items-center justify-between gap-3 select-none">
         {/* Mode Selector */}
-        <div className="flex items-center gap-1.5 p-1 bg-[#141419] rounded-xl border border-white/[0.08]">
+        <div className="flex items-center gap-1.5 p-1 bg-[#141418] border border-white/10 rounded-xl">
           <button
             onClick={() => setMode('interview_coach')}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition ${
@@ -191,8 +221,8 @@ export default function TalkToRepo({ project }) {
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <Target size={13} />
-            <span>Interview Coach</span>
+            <Bot size={13} />
+            <span>Staff Interview Coach</span>
           </button>
 
           <button
@@ -220,15 +250,98 @@ export default function TalkToRepo({ project }) {
           </button>
         </div>
 
-        {/* Model Telemetry & Pipeline Explainer Button */}
-        <div className="flex items-center gap-3">
+        {/* Dynamic Gemini Model Selector & Pipeline Explainer Button */}
+        <div className="flex items-center gap-2.5">
+          {/* Dynamic Model Dropdown */}
+          <div className="relative" ref={modelMenuRef}>
+            <button
+              onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border border-white/10 transition"
+              title="Select Gemini Model from Google AI Studio"
+            >
+              <Cpu size={13} className="text-amber-200/90" />
+              <span className="font-medium max-w-[200px] truncate">
+                {activeModelName}
+              </span>
+              <ChevronDown size={12} className={`text-zinc-500 transition-transform ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Model Selection Dropdown Menu */}
+            {isModelDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-[#121217] border border-white/10 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-1">
+                <div className="px-3 py-2 border-b border-white/[0.08] flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-sans uppercase tracking-widest text-zinc-500 font-semibold block">
+                      Google AI Studio Models ({geminiModels.length})
+                    </span>
+                    <span className="text-[11px] text-zinc-400">
+                      Live, usable generation models
+                    </span>
+                  </div>
+                  <button
+                    onClick={loadDynamicModels}
+                    disabled={modelsLoading}
+                    className="p-1 text-zinc-400 hover:text-white rounded transition"
+                    title="Refresh live models from Google AI Studio"
+                  >
+                    <RefreshCw size={12} className={modelsLoading ? 'animate-spin' : ''} />
+                  </button>
+                </div>
+
+                <div className="max-h-64 overflow-y-auto space-y-1 py-1">
+                  {geminiModels.map((m) => {
+                    const isSelected = selectedModelId === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => handleSelectModel(m)}
+                        className={`w-full p-2.5 rounded-xl text-left text-xs transition flex flex-col gap-1 ${
+                          isSelected
+                            ? 'bg-white/[0.08] border border-white/10 text-white'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-white truncate flex items-center gap-1.5">
+                            {m.display_name}
+                            {isSelected && <Check size={12} className="text-amber-200" />}
+                          </span>
+                          {m.is_lowest_cost ? (
+                            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-950/40 text-emerald-300 border border-emerald-800/30">
+                              Lowest Cost
+                            </span>
+                          ) : m.is_latest ? (
+                            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-950/40 text-amber-200 border border-amber-800/30">
+                              Latest
+                            </span>
+                          ) : null}
+                        </div>
+                        <span className="text-[10px] text-zinc-500 font-mono truncate">
+                          {m.id}
+                        </span>
+                        {m.description && (
+                          <span className="text-[10px] text-zinc-400 line-clamp-1 leading-relaxed">
+                            {m.description}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="px-3 py-2 border-t border-white/[0.08] text-[10px] text-zinc-500">
+                  Models automatically update dynamically so deprecated versions are never locked in.
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => setShowPipelineInfo(!showPipelineInfo)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border border-white/10 transition"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition"
+            title="How Projector generates answers"
           >
-            <Cpu size={13} className="text-amber-200/90" />
-            <span className="font-medium">Model: {activeModelName}</span>
-            <Info size={12} className="text-zinc-500 ml-0.5" />
+            <Info size={13} />
           </button>
 
           <button
@@ -270,7 +383,7 @@ export default function TalkToRepo({ project }) {
           <div className="max-w-3xl mx-auto py-10 animate-in fade-in">
             <div className="text-center mb-10">
               <span className="text-[11px] font-sans uppercase tracking-widest text-amber-200/80 font-semibold block mb-2">
-                Dossier Consultation
+                Workspace Consultation
               </span>
               <h2 className="text-3xl font-serif font-bold tracking-tight text-white">
                 Conversations on {project.name}
@@ -325,7 +438,9 @@ export default function TalkToRepo({ project }) {
                 {!isUser && msg.model_used && (
                   <>
                     <span>•</span>
-                    <span className="text-[10px] text-zinc-500 font-mono">{msg.model_used}</span>
+                    <span className="text-[10px] text-zinc-500 font-mono bg-white/[0.04] px-1.5 py-0.2 rounded border border-white/5">
+                      {msg.model_used}
+                    </span>
                   </>
                 )}
               </div>
@@ -395,7 +510,7 @@ export default function TalkToRepo({ project }) {
           <div className="flex flex-col max-w-3xl mx-auto items-start">
             <div className="p-4 rounded-2xl bg-[#121217] border border-white/[0.08] text-xs text-zinc-400 flex items-center gap-3">
               <Loader2 size={16} className="animate-spin text-amber-200" />
-              <span>Analyzing code AST and generating structured findings...</span>
+              <span>Analyzing code AST with {activeModelName}...</span>
             </div>
           </div>
         )}
@@ -414,27 +529,26 @@ export default function TalkToRepo({ project }) {
         >
           <input
             type="text"
-            placeholder={
-              mode === 'interview_coach'
-                ? 'Ask a question or type "Grill me on database transactions"...'
-                : 'Ask about implementation, dependencies, or algorithms...'
-            }
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            placeholder={`Ask anything about ${project.name} architecture, tradeoffs, or files...`}
             disabled={loading}
-            className="w-full pl-5 pr-14 py-3.5 rounded-full bg-[#121217] border border-white/15 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white/40 transition shadow-inner"
+            className="w-full pl-5 pr-28 py-3.5 bg-[#121217] border border-white/15 focus:border-amber-200/50 rounded-2xl text-sm text-white placeholder-zinc-500 focus:outline-none transition shadow-lg"
           />
-          <button
-            type="submit"
-            disabled={!input.trim() || loading}
-            className="absolute right-2 p-2.5 rounded-full bg-white text-zinc-950 hover:bg-zinc-200 transition disabled:opacity-30 disabled:hover:bg-white"
-          >
-            <Send size={15} />
-          </button>
+
+          <div className="absolute right-2 flex items-center gap-1.5">
+            <button
+              type="submit"
+              disabled={loading || !input.trim()}
+              className="p-2.5 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 font-semibold disabled:opacity-30 disabled:hover:bg-white transition"
+            >
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+            </button>
+          </div>
         </form>
       </div>
 
-      {/* Code Citation Inspector Modal */}
+      {/* In-app Code Viewer Modal */}
       {inspectFile && (
         <CodeViewerModal
           projectId={project.id}
