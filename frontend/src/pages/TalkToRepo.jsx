@@ -3,29 +3,50 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
   Send,
-  Terminal,
   Target,
   Search,
   Zap,
-  Code,
   FileCode,
   Copy,
   Check,
   RefreshCw,
   Loader2,
   ChevronRight,
-  HardDrive
+  Info,
+  Cpu,
+  Sparkles,
+  Layers
 } from 'lucide-react';
-import { chatApi } from '../api/client';
+import { chatApi, settingsApi } from '../api/client';
 import VoicePlayer from '../components/VoicePlayer';
 import CodeViewerModal from '../components/CodeViewerModal';
 
-const PRESET_PROMPTS = [
-  { label: 'ARCH_JUSTIFICATION', desc: 'Why this tech stack?', text: 'Why did I choose this specific tech stack and what were the architectural benefits over alternatives?' },
-  { label: 'CORE_TRADEOFF', desc: 'Hardest technical tradeoff', text: 'What was the single hardest technical challenge and architectural tradeoff in this repository?' },
-  { label: 'DATA_PIPELINE', desc: 'Walk me through data flow', text: 'Walk me through how data flows through this codebase from ingress endpoint to database persistence.' },
-  { label: 'SCALE_LIMIT', desc: '100x Scaling Bottleneck', text: 'If traffic to this project surges by 100x overnight, what will break first and how should I mitigate it?' },
-  { label: 'STAR_ELEVATOR', desc: '60s STAR Pitch', text: 'Give me a 60-second elevator pitch about this project formatted for a technical interview (STAR format).' },
+const EDITORIAL_PROMPTS = [
+  {
+    title: 'The Architectural Rationale',
+    subtitle: 'Why this tech stack over alternatives?',
+    query: 'Walk me through the foundational architectural decisions in this repository. Why was this specific tech stack chosen, and what were the primary engineering tradeoffs?'
+  },
+  {
+    title: 'The Hardest Engineering Challenge',
+    subtitle: 'Single toughest bottleneck & solution',
+    query: 'What was the single most difficult technical challenge, concurrency edge-case, or bottleneck in this project? Walk me through how it was diagnosed and resolved.'
+  },
+  {
+    title: 'End-to-End Data Lifecycle',
+    subtitle: 'From ingress request to database commit',
+    query: 'Trace the lifecycle of a request in this project from HTTP ingress and schema validation down to database persistence. How is atomic consistency preserved?'
+  },
+  {
+    title: '100x Concurrency Stress Test',
+    subtitle: 'What breaks first under sudden surge?',
+    query: 'If traffic to this service surges by 100x overnight, where will the system buckle first (database connections, event loop, worker thread pools), and how would you scale it?'
+  },
+  {
+    title: 'Executive STAR Elevator Pitch',
+    subtitle: '60-second interview summary',
+    query: 'Provide an articulate 60-second summary of this project formatted for a Senior/Staff Software Engineer interview, utilizing the STAR method (Situation, Task, Action, Result).'
+  }
 ];
 
 export default function TalkToRepo({ project }) {
@@ -37,6 +58,11 @@ export default function TalkToRepo({ project }) {
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
 
+  // Active Model & Pipeline Explainer
+  const [activeModelName, setActiveModelName] = useState('Gemini 2.5 Flash');
+  const [showPipelineInfo, setShowPipelineInfo] = useState(false);
+
+  // Citation inspection modal
   const [inspectFile, setInspectFile] = useState(null);
   const [inspectLines, setInspectLines] = useState(null);
 
@@ -45,6 +71,18 @@ export default function TalkToRepo({ project }) {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    settingsApi.get().then((cfg) => {
+      if (cfg.gemini_configured) {
+        setActiveModelName(cfg.gemini_model || 'Gemini 2.5 Flash');
+      } else if (cfg.openai_configured) {
+        setActiveModelName(cfg.openai_model || 'GPT-4o-mini');
+      } else {
+        setActiveModelName('Rule-Based AST Synthesizer (Zero-Key Mode)');
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!project?.id) return;
@@ -94,7 +132,7 @@ export default function TalkToRepo({ project }) {
         {
           id: `err-${Date.now()}`,
           role: 'assistant',
-          content: '⚠️ [ERROR: EXECUTION_HALTED] Failed to reach inference engine. Check network or keys in Settings.',
+          content: '⚠️ Failed to complete inference. Please verify network connectivity or API credentials in Settings.',
           created_at: new Date().toISOString(),
         },
       ]);
@@ -109,7 +147,7 @@ export default function TalkToRepo({ project }) {
     try {
       const sess = await chatApi.createSession({
         project_id: project.id,
-        title: `Session [${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}]`,
+        title: `Dialogue — ${new Date().toLocaleDateString()}`,
         mode: mode,
       });
       setCurrentSession(sess);
@@ -132,101 +170,136 @@ export default function TalkToRepo({ project }) {
 
   if (!project) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center text-steel-500 font-mono">
-        <Terminal size={32} className="text-steel-600 mb-2" />
-        <h3 className="text-xs font-bold text-steel-300 uppercase tracking-wider">NO_ACTIVE_TARGET</h3>
-        <p className="text-[11px] max-w-sm mt-1">Mount a target repository to initiate telemetry and codebase chat.</p>
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center text-zinc-500 font-sans">
+        <h3 className="text-lg font-serif font-bold text-white mb-2">No Subject Selected</h3>
+        <p className="text-xs text-zinc-400 max-w-sm">Connect a GitHub repository or local folder above to begin conversational code exploration.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-[#07080c] overflow-hidden relative">
-      {/* Precision Segmented Control Bar */}
-      <div className="px-4 sm:px-6 py-2 bg-[#090b12] border-b border-[#181c2b] flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-1 p-0.5 bg-[#050609] rounded border border-[#1b1f30] font-mono text-[11px]">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-[#09090b] overflow-hidden relative font-sans">
+      {/* Top Editorial Mode Bar */}
+      <div className="px-6 py-3 bg-[#0d0d11] border-b border-white/[0.08] flex items-center justify-between gap-4 flex-wrap">
+        {/* Mode Selector */}
+        <div className="flex items-center gap-1.5 p-1 bg-[#141419] rounded-xl border border-white/[0.08]">
           <button
             onClick={() => setMode('interview_coach')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded transition ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition ${
               mode === 'interview_coach'
-                ? 'bg-[#141a2e] text-blue-300 border border-blue-500/50 font-semibold'
-                : 'text-steel-500 hover:text-steel-300 border border-transparent'
+                ? 'bg-white text-zinc-950 font-semibold shadow-sm'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <Target size={12} />
-            <span>01 // GRILL_MODE</span>
+            <Target size={13} />
+            <span>Interview Coach</span>
           </button>
 
           <button
             onClick={() => setMode('code_explorer')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded transition ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition ${
               mode === 'code_explorer'
-                ? 'bg-[#141a2e] text-blue-300 border border-blue-500/50 font-semibold'
-                : 'text-steel-500 hover:text-steel-300 border border-transparent'
+                ? 'bg-white text-zinc-950 font-semibold shadow-sm'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <Search size={12} />
-            <span>02 // CODE_EXPLORER</span>
+            <Search size={13} />
+            <span>Codebase Explorer</span>
           </button>
 
           <button
             onClick={() => setMode('quick_recall')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded transition ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition ${
               mode === 'quick_recall'
-                ? 'bg-[#1e1509] text-amber-300 border border-amber-500/50 font-semibold'
-                : 'text-steel-500 hover:text-steel-300 border border-transparent'
+                ? 'bg-amber-100 text-zinc-950 font-semibold shadow-sm'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <Zap size={12} />
-            <span>03 // QUICK_RECALL</span>
+            <Zap size={13} />
+            <span>Waiting-Room Recall</span>
           </button>
         </div>
 
-        <button
-          onClick={handleNewSession}
-          disabled={loading}
-          className="btn-mechanical flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-mono text-steel-400 hover:text-white transition"
-        >
-          <RefreshCw size={11} className={loading ? 'animate-spin' : ''} />
-          <span>RESET_STREAM</span>
-        </button>
+        {/* Model Telemetry & Pipeline Explainer Button */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowPipelineInfo(!showPipelineInfo)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border border-white/10 transition"
+          >
+            <Cpu size={13} className="text-amber-200/90" />
+            <span className="font-medium">Model: {activeModelName}</span>
+            <Info size={12} className="text-zinc-500 ml-0.5" />
+          </button>
+
+          <button
+            onClick={handleNewSession}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white border border-white/10 transition"
+          >
+            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
+            <span>New Session</span>
+          </button>
+        </div>
       </div>
 
-      {/* Messages Stream */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-5">
-        {messages.length === 0 && (
-          <div className="max-w-2xl mx-auto text-center py-10 animate-in fade-in">
-            <div className="w-10 h-10 rounded-md bg-[#101422] border border-[#23293e] mx-auto flex items-center justify-center text-blue-400 mb-3 shadow-inner">
-              <Terminal size={20} />
-            </div>
-            <h2 className="text-base font-mono font-bold tracking-tight text-white uppercase">
-              Projector Runtime // {project.name}
-            </h2>
-            <p className="text-xs text-steel-400 mt-1 max-w-md mx-auto font-sans leading-relaxed">
-              Target repository AST mapped ({project.file_count} files). Drill into design choices, concurrency patterns, or trigger mock interview grilling.
+      {/* RAG Generation Pipeline Popover */}
+      {showPipelineInfo && (
+        <div className="px-6 py-4 bg-[#14141a] border-b border-white/10 text-xs text-zinc-300 flex items-start justify-between gap-4 animate-in slide-in-from-top-2">
+          <div className="space-y-1">
+            <h4 className="font-serif font-bold text-white text-sm flex items-center gap-2">
+              <Sparkles size={14} className="text-amber-200/90" /> How Projector Generates Answers
+            </h4>
+            <p className="text-zinc-400 leading-relaxed max-w-3xl">
+              1. <strong>AST & Line-Accurate Chunker</strong>: Code files in <code className="text-white font-mono">{project.name}</code> are indexed into sliding windows preserving line numbers.<br />
+              2. <strong>Keyword & Semantic Retrieval (RAG)</strong>: Your prompt scores matching functions, classes, and manifests to retrieve the most relevant snippets.<br />
+              3. <strong>Context Injection & Inference</strong>: Snippets are passed to <strong>{activeModelName}</strong> with a Staff-level interview persona instructing it to produce clear, structured answers with source citations.
             </p>
+          </div>
+          <button
+            onClick={() => setShowPipelineInfo(false)}
+            className="text-zinc-400 hover:text-white p-1"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
-            {/* Quick Suggestion Terminal Cards */}
-            <div className="mt-8 text-left font-mono">
-              <div className="flex items-center justify-between text-[10px] text-steel-500 uppercase tracking-widest mb-2.5 border-b border-[#181c2a] pb-1">
-                <span>Preset Queries // Interview Rubric</span>
-                <span>[SELECT_TO_EXEC]</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {PRESET_PROMPTS.map((p, idx) => (
+      {/* Messages Stream */}
+      <div className="flex-1 overflow-y-auto px-6 sm:px-12 py-8 space-y-8">
+        {messages.length === 0 && (
+          <div className="max-w-3xl mx-auto py-10 animate-in fade-in">
+            <div className="text-center mb-10">
+              <span className="text-[11px] font-sans uppercase tracking-widest text-amber-200/80 font-semibold block mb-2">
+                Dossier Consultation
+              </span>
+              <h2 className="text-3xl font-serif font-bold tracking-tight text-white">
+                Conversations on {project.name}
+              </h2>
+              <p className="text-sm text-zinc-400 mt-2 max-w-lg mx-auto leading-relaxed">
+                Explore architectural decisions, isolate scaling bottlenecks, or prepare for Staff-level interview questions.
+              </p>
+            </div>
+
+            {/* Editorial Preset Query Cards */}
+            <div className="space-y-2.5">
+              <span className="text-[11px] font-sans uppercase tracking-widest text-zinc-500 font-semibold block mb-3">
+                Curated Interview Questions
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {EDITORIAL_PROMPTS.map((p, idx) => (
                   <button
                     key={idx}
-                    onClick={() => handleSend(p.text)}
-                    className="p-2.5 rounded bg-[#090b12] hover:bg-[#101320] border border-[#1b2030] hover:border-[#2f3854] text-left transition group"
+                    onClick={() => handleSend(p.query)}
+                    className="p-4 rounded-2xl bg-[#121217] hover:bg-[#16161d] border border-white/[0.08] hover:border-white/20 text-left transition group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-blue-400 group-hover:text-blue-300">
-                        {p.label}
+                      <span className="font-serif font-semibold text-white group-hover:text-amber-100 text-sm">
+                        {p.title}
                       </span>
-                      <ChevronRight size={12} className="text-steel-600 group-hover:text-steel-300 transition" />
+                      <ChevronRight size={14} className="text-zinc-600 group-hover:text-white transition" />
                     </div>
-                    <p className="text-[11px] font-sans text-steel-400 mt-1 line-clamp-1">
-                      {p.desc}
+                    <p className="text-xs text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                      {p.subtitle}
                     </p>
                   </button>
                 ))}
@@ -242,43 +315,49 @@ export default function TalkToRepo({ project }) {
               key={msg.id}
               className={`flex flex-col max-w-3xl mx-auto ${isUser ? 'items-end' : 'items-start'}`}
             >
-              {/* Message Metadata Header */}
-              <div className="flex items-center gap-2 mb-1 px-1 font-mono text-[10px] text-steel-500">
-                <span className={isUser ? 'text-steel-400 font-bold' : 'text-blue-400 font-bold'}>
-                  {isUser ? 'DEV::INPUT' : 'SYS::SPEC_OUTPUT'}
+              {/* Message Role & Timestamp */}
+              <div className="flex items-center gap-2 mb-1.5 px-1 text-xs text-zinc-500">
+                <span className={`font-semibold ${isUser ? 'text-zinc-300' : 'text-amber-200/90 font-serif'}`}>
+                  {isUser ? 'You' : 'Projector Companion'}
                 </span>
                 <span>•</span>
-                <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                {!isUser && msg.model_used && (
+                  <>
+                    <span>•</span>
+                    <span className="text-[10px] text-zinc-500 font-mono">{msg.model_used}</span>
+                  </>
+                )}
               </div>
 
+              {/* Message Box */}
               <div
-                className={`rounded-md p-4 sm:p-5 text-xs sm:text-sm leading-relaxed max-w-full ${
+                className={`rounded-2xl p-6 sm:p-7 leading-relaxed max-w-full ${
                   isUser
-                    ? 'bg-[#121626] border border-[#2563eb]/40 text-steel-100'
-                    : 'dev-card border border-[#1c2132] text-steel-200'
+                    ? 'bg-[#18181f] border border-white/15 text-white font-sans text-sm sm:text-[15px]'
+                    : 'bg-[#121217] border border-white/[0.08] text-zinc-200 shadow-xl'
                 }`}
               >
                 {!isUser && (
-                  <div className="flex items-center justify-between border-b border-[#181c2b] pb-2 mb-3 text-steel-500 text-[11px] font-mono">
-                    <span className="text-steel-400 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                      INFERENCE // STREAM_VERIFIED
+                  <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-5 text-xs text-zinc-400">
+                    <span className="text-[11px] font-sans uppercase tracking-widest text-zinc-400">
+                      Analysis & Findings
                     </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                       <VoicePlayer text={msg.content} />
                       <button
                         onClick={() => handleCopyMessage(msg.id, msg.content)}
-                        className="p-1 hover:text-white rounded transition text-steel-400"
+                        className="p-1 hover:text-white rounded transition text-zinc-400"
                         title="Copy Response"
                       >
-                        {copiedId === msg.id ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                        {copiedId === msg.id ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Markdown Body */}
-                <div className="prose prose-invert prose-xs max-w-none prose-pre:bg-[#07080d] prose-pre:border prose-pre:border-[#1d2234] prose-headings:font-mono prose-headings:text-white prose-a:text-blue-400 font-sans">
+                {/* Highly Readable Editorial Prose */}
+                <div className="editorial-prose font-sans">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {msg.content}
                   </ReactMarkdown>
@@ -286,24 +365,21 @@ export default function TalkToRepo({ project }) {
 
                 {/* Code Citations Shelf */}
                 {!isUser && msg.citations && msg.citations.length > 0 && (
-                  <div className="mt-4 pt-3 border-t border-[#181c2b] font-mono">
-                    <div className="flex items-center justify-between text-[10px] text-steel-500 uppercase tracking-widest mb-1.5">
-                      <span className="flex items-center gap-1">
-                        <FileCode size={11} className="text-blue-400" />
-                        Referenced AST Citations
-                      </span>
-                      <span>[{msg.citations.length}]</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
+                  <div className="mt-6 pt-4 border-t border-white/[0.08]">
+                    <span className="text-[10px] font-sans uppercase tracking-widest text-zinc-400 block mb-2.5 font-semibold">
+                      Referenced Code Citations
+                    </span>
+                    <div className="flex flex-wrap gap-2">
                       {msg.citations.map((c, i) => (
                         <button
                           key={i}
                           onClick={() => openCitation(c.file, c.line_start, c.line_end)}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#07080d] hover:bg-[#121626] text-blue-300 border border-[#1e2436] hover:border-blue-500/50 text-[10px] transition"
+                          className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1c1c24] hover:bg-[#23232e] text-zinc-200 border border-white/10 hover:border-white/20 text-xs font-mono transition"
                         >
+                          <FileCode size={12} className="text-amber-200/90" />
                           <span>{c.file}</span>
                           {c.line_start && (
-                            <span className="text-steel-500">:{c.line_start}</span>
+                            <span className="text-zinc-500">:{c.line_start}</span>
                           )}
                         </button>
                       ))}
@@ -317,12 +393,9 @@ export default function TalkToRepo({ project }) {
 
         {loading && (
           <div className="flex flex-col max-w-3xl mx-auto items-start">
-            <div className="px-1 text-[10px] font-mono text-steel-500 mb-1">
-              SYS::PROCESSING
-            </div>
-            <div className="dev-card p-3 rounded-md text-xs font-mono text-steel-400 flex items-center gap-2 border border-[#1f2538]">
-              <Loader2 size={13} className="animate-spin text-blue-400" />
-              <span>Scanning AST & calculating cross-references...</span>
+            <div className="p-4 rounded-2xl bg-[#121217] border border-white/[0.08] text-xs text-zinc-400 flex items-center gap-3">
+              <Loader2 size={16} className="animate-spin text-amber-200" />
+              <span>Analyzing code AST and generating structured findings...</span>
             </div>
           </div>
         )}
@@ -330,36 +403,33 @@ export default function TalkToRepo({ project }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Terminal Input Bar */}
-      <div className="p-3 sm:p-4 bg-[#07080c] border-t border-[#181c2b]">
+      {/* Input Bar */}
+      <div className="p-4 sm:p-6 bg-[#09090b] border-t border-white/[0.08]">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSend();
           }}
-          className="max-w-3xl mx-auto relative flex items-center font-mono"
+          className="max-w-3xl mx-auto relative flex items-center"
         >
-          <div className="absolute left-3 text-steel-500 text-xs select-none">
-            &gt;
-          </div>
           <input
             type="text"
             placeholder={
               mode === 'interview_coach'
-                ? 'Type prompt or "Grill me on scaling bottlenecks"...'
-                : 'Query AST for algorithms, routes, schemas...'
+                ? 'Ask a question or type "Grill me on database transactions"...'
+                : 'Ask about implementation, dependencies, or algorithms...'
             }
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={loading}
-            className="w-full pl-7 pr-12 py-2.5 rounded bg-[#0d0f17] border border-[#202538] text-steel-100 placeholder-steel-600 text-xs focus:outline-none focus:border-blue-500 transition font-mono"
+            className="w-full pl-5 pr-14 py-3.5 rounded-full bg-[#121217] border border-white/15 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-white/40 transition shadow-inner"
           />
           <button
             type="submit"
             disabled={!input.trim() || loading}
-            className="absolute right-1.5 p-1.5 rounded btn-tactical-blue text-white transition disabled:opacity-30"
+            className="absolute right-2 p-2.5 rounded-full bg-white text-zinc-950 hover:bg-zinc-200 transition disabled:opacity-30 disabled:hover:bg-white"
           >
-            <Send size={13} />
+            <Send size={15} />
           </button>
         </form>
       </div>

@@ -91,6 +91,7 @@ class ChatMessageResponse(BaseModel):
     role: str
     content: str
     citations: List[Dict[str, Any]] = Field(default_factory=list)
+    model_used: Optional[str] = "gemini-2.5-flash"
     created_at: datetime
 
     class Config:

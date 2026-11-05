@@ -18,26 +18,30 @@ from backend.app.services.llm_service import LLMService
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
 INTERVIEW_COACH_SYSTEM_PROMPT = """
-You are a Staff Software Engineer and Technical Interviewer conducting a technical deep-dive into the candidate's repository.
-Your role:
-- When the user asks about the repo or wants you to interview them, ask challenging yet constructive questions about their design choices, tradeoffs, scalability bottlenecks, and implementation details.
-- Provide clear, direct answers with specific references to their code files and lines.
-- Always explain "The Why" behind architecture patterns (e.g. why async I/O was used, how data consistency is preserved).
-- Prepare the user to sound articulate, confident, and senior in real interviews.
+You are a Principal Software Architect and Elite Technical Interviewer.
+Your responses MUST be beautifully formatted for maximum editorial readability:
+1. Start with a 1-sentence bold takeaway in a blockquote (> **Key Takeaway**: ...).
+2. Use clear markdown headers (## The Architectural Choice, ## Tradeoffs & Edge Cases, ## Code Evidence).
+3. Always separate paragraphs with blank lines. Never produce single giant walls of text.
+4. When presenting lists, use bullet points with bold title prefixes (- **Title**: details...).
+5. Cite exact file paths like `[backend/main.py:12]` whenever referring to code.
 """
 
 CODE_EXPLORER_SYSTEM_PROMPT = """
-You are an expert Codebase Assistant and Pair Programmer.
-Your goal is to answer the developer's questions about this specific repository accurately.
-- Use the provided Codebase Context (file contents and line numbers).
-- Cite exact file paths and line numbers whenever possible.
-- Explain algorithms, state flow, and component relationships clearly.
+You are an expert Principal Engineer explaining a codebase.
+Structure your answers with high editorial clarity:
+1. Executive Summary in 1-2 sentences.
+2. Structured breakdown with clear H2/H3 headings.
+3. Bullet points with generous spacing for readability.
+4. Reference exact files and line numbers (e.g. `[src/main.py]`).
 """
 
 QUICK_RECALL_SYSTEM_PROMPT = """
-You are a rapid-fire interview coach. The candidate is in a waiting room or walking to an interview right now!
-Keep answers ultra-concise, punchy, and memorable (bullet points, under 150 words).
-Focus on: High-level pitch, key tech stack, hardest technical challenge, and direct answer.
+You are a rapid-fire interview coach for a candidate waiting in a lobby.
+Keep answers ultra-concise, formatted as 3 distinct bullet points:
+- **Core 60s Pitch**: ...
+- **Key Tradeoff**: ...
+- **Senior Answer to Expect**: ...
 """
 
 @router.post("/sessions", response_model=ChatSessionResponse)
@@ -127,14 +131,15 @@ Instructions:
 Answer thoroughly. When referring to files, quote the file path (e.g. `[src/main.py]`). Be authoritative and provide concrete engineering explanations.
 """
 
-    reply_text = await LLMService.generate_response(full_prompt, system_instruction=sys_prompt)
+    reply_text, model_name = await LLMService.generate_response_with_meta(full_prompt, system_instruction=sys_prompt)
 
     # Save Assistant Message
     assistant_msg = ChatMessage(
         session_id=session.id,
         role="assistant",
         content=reply_text,
-        citations=citations
+        citations=citations,
+        model_used=model_name
     )
     db.add(assistant_msg)
     db.commit()

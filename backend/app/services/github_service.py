@@ -98,6 +98,24 @@ class GitHubService:
         return str(target_dir)
 
     @staticmethod
+    async def get_user_profile(token: str) -> Dict[str, Any]:
+        """Fetches profile for authenticated GitHub user."""
+        headers = GitHubService.get_headers(token)
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get("https://api.github.com/user", headers=headers)
+            if resp.status_code != 200:
+                raise ValueError(f"GitHub Auth Error: {resp.json().get('message', 'Invalid token')}")
+            data = resp.json()
+            return {
+                "login": data.get("login"),
+                "name": data.get("name"),
+                "avatar_url": data.get("avatar_url"),
+                "html_url": data.get("html_url"),
+                "public_repos": data.get("public_repos", 0),
+                "total_private_repos": data.get("total_private_repos", 0)
+            }
+
+    @staticmethod
     async def list_user_repos(token: str) -> List[Dict[str, Any]]:
         """Lists repositories for an authenticated user."""
         headers = GitHubService.get_headers(token)

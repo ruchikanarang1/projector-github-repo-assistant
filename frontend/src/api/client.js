@@ -44,6 +44,7 @@ export const projectApi = {
   createSample: () => api.post('/api/projects/sample').then((res) => res.data),
   getFile: (projectId, path) => api.get(`/api/projects/${projectId}/file`, { params: { path } }).then((res) => res.data),
   delete: (projectId) => api.delete(`/api/projects/${projectId}`).then((res) => res.data),
+  getGitHubProfile: (token) => api.get('/api/projects/github/profile', { params: { token } }).then((res) => res.data),
   getGitHubUserRepos: (token) => api.get('/api/projects/github/user-repos', { params: { token } }).then((res) => res.data),
 };
 

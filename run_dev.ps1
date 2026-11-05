@@ -20,3 +20,4 @@ Write-Host "  Both services launched in dedicated terminal windows!" -Foreground
 Write-Host "  - Frontend App: http://localhost:5173" -ForegroundColor Yellow
 Write-Host "  - API Swagger:  http://127.0.0.1:8000/docs" -ForegroundColor Yellow
 Write-Host "========================================================" -ForegroundColor Cyan
+

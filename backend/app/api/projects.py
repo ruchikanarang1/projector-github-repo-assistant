@@ -327,6 +327,14 @@ def delete_project(project_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "success", "message": f"Project {project_id} deleted"}
 
+@router.get("/github/profile")
+async def get_github_profile(token: str = Query(..., description="GitHub Personal Access Token")):
+    try:
+        profile = await GitHubService.get_user_profile(token)
+        return profile
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @router.get("/github/user-repos")
 async def get_github_user_repos(token: str = Query(..., description="GitHub Personal Access Token")):
     try:

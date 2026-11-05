@@ -4,100 +4,193 @@
 
 @layer base {
   body {
-    @apply bg-obsidian-950 text-steel-200 antialiased;
-    font-family: 'Space Grotesk', -apple-system, sans-serif;
-    letter-spacing: -0.015em;
+    @apply bg-noir-900 text-zinc-200 antialiased font-sans;
+    letter-spacing: -0.01em;
+  }
+
+  h1, h2, h3, .font-serif {
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.02em;
   }
 
   code, pre, .font-mono {
     font-family: 'JetBrains Mono', monospace;
-    letter-spacing: -0.02em;
   }
 }
 
-/* Precision Scrollbars */
+/* Editorial subtle scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090a0f;
+  background: #09090b;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #222638;
-  border-radius: 2px;
+  background: #23232a;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3b82f6;
+  background: #c5a777;
 }
 
-/* Precision Engineering UI Panels */
-.dev-card {
-  background: #0d0e16;
-  border: 1px solid #1e2235;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+/* Editorial Vogue Surface Panels */
+.editorial-card {
+  background: #101014;
+  border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.dev-card-interactive {
-  background: #0d0e16;
-  border: 1px solid #1e2235;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+.editorial-card-hover {
+  background: #101014;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dev-card-interactive:hover {
-  background: #12141f;
-  border-color: #2e3552;
+.editorial-card-hover:hover {
+  background: #15151a;
+  border-color: rgba(197, 167, 119, 0.3);
 }
 
-.dev-card-subtle {
-  background: #0a0b12;
-  border: 1px solid #191c2b;
+/* Luxury Pill & Button Accents */
+.btn-editorial-primary {
+  background: #f4f4f5;
+  color: #09090b;
+  font-weight: 600;
+  border: 1px solid #ffffff;
+  transition: all 0.15s ease;
 }
 
-/* Engineering Technical Header Grid */
-.blueprint-grid {
-  background-size: 24px 24px;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+.btn-editorial-primary:hover {
+  background: #e4e4e7;
+  transform: translateY(-1px);
 }
 
-.micro-grid {
-  background-size: 12px 12px;
-  background-image: 
-    radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+.btn-editorial-secondary {
+  background: #141418;
+  color: #f4f4f5;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.15s ease;
 }
 
-/* Mechanical Keyboard / Terminal Button Feeling */
-.btn-mechanical {
-  background: #141724;
-  border: 1px solid #282f48;
-  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset, 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-  transition: all 0.1s ease;
+.btn-editorial-secondary:hover {
+  background: #1c1c22;
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-.btn-mechanical:hover {
-  background: #1a1e30;
-  border-color: #3b456a;
+.btn-editorial-accent {
+  background: #c5a777;
+  color: #09090b;
+  font-weight: 600;
+  border: 1px solid #d7c29e;
+  transition: all 0.15s ease;
 }
 
-.btn-mechanical:active {
-  transform: translateY(1px);
-  box-shadow: 0 0 0 0 transparent;
+.btn-editorial-accent:hover {
+  background: #d7c29e;
+  transform: translateY(-1px);
 }
 
-.btn-tactical-blue {
-  background: #1d4ed8;
-  border: 1px solid #3b82f6;
-  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.2) inset, 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+/* Chatbot editorial formatting enhancement */
+.editorial-prose {
+  line-height: 1.85;
+  font-size: 0.95rem;
+  color: #d4d4d8;
+  letter-spacing: 0.005em;
 }
 
-.btn-tactical-blue:hover {
-  background: #2563eb;
-  border-color: #60a5fa;
+.editorial-prose p {
+  margin-bottom: 1.35rem;
+  line-height: 1.85;
+}
+
+.editorial-prose strong {
+  color: #fafafa;
+  font-weight: 600;
+}
+
+.editorial-prose h1, .editorial-prose h2, .editorial-prose h3, .editorial-prose h4 {
+  font-family: 'Playfair Display', Georgia, serif;
+  color: #fafafa;
+  margin-top: 1.85rem;
+  margin-bottom: 0.85rem;
+  letter-spacing: -0.015em;
+}
+
+.editorial-prose h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.45rem;
+}
+
+.editorial-prose h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.editorial-prose h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.editorial-prose blockquote {
+  border-left: 3px solid #c5a777;
+  padding: 0.65rem 1.25rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: #f4f4f5;
+  background: rgba(197, 167, 119, 0.05);
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.editorial-prose ul {
+  list-style-type: disc !important;
+  margin-bottom: 1.35rem;
+  padding-left: 1.5rem !important;
+}
+
+.editorial-prose ol {
+  list-style-type: decimal !important;
+  margin-bottom: 1.35rem;
+  padding-left: 1.5rem !important;
+}
+
+.editorial-prose li {
+  margin-bottom: 0.65rem;
+  line-height: 1.75;
+}
+
+.editorial-prose li::marker {
+  color: #c5a777;
+}
+
+.editorial-prose code {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f4f5;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+  font-size: 0.85em;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.editorial-prose pre {
+  background: #09090b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  padding: 1.15rem 1.25rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.editorial-prose pre code {
+  background: transparent;
+  padding: 0;
+  border: none;
+  font-size: 0.85rem;
 }
 
 /* Flashcard 3D flip */
@@ -115,31 +208,4 @@
 
 .rotate-y-180 {
   transform: rotateY(180deg);
-}
-
-/* Corner bracket crosshairs */
-.corner-bracket {
-  position: relative;
-}
-
-.corner-bracket::before {
-  content: '+';
-  position: absolute;
-  top: -6px;
-  left: -5px;
-  font-family: monospace;
-  font-size: 10px;
-  color: #475569;
-  line-height: 1;
-}
-
-.corner-bracket::after {
-  content: '+';
-  position: absolute;
-  bottom: -6px;
-  right: -5px;
-  font-family: monospace;
-  font-size: 10px;
-  color: #475569;
-  line-height: 1;
 }

@@ -67,6 +67,7 @@ class ChatMessage(Base):
     role = Column(String(20), nullable=False)  # user, assistant, system
     content = Column(Text, nullable=False)
     citations = Column(JSON, default=list)  # list of {file, line_start, line_end, snippet}
+    model_used = Column(String(100), nullable=True)  # e.g. gemini-2.5-flash, gpt-4o, heuristic
     created_at = Column(DateTime, default=get_utc_now)
 
     session = relationship("ChatSession", back_populates="messages")

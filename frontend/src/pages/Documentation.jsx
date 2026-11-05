@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
-  FileText,
+  BookOpen,
   GitBranch,
   FolderTree,
   Scale,
@@ -13,19 +13,19 @@ import {
   Check,
   RefreshCw,
   Loader2,
-  Terminal,
-  Compass
+  Compass,
+  Sparkles
 } from 'lucide-react';
 import { docApi } from '../api/client';
 import MermaidViewer from '../components/MermaidViewer';
 
 const DOC_TABS = [
-  { id: 'architecture', code: '01', label: 'Architecture & Design', icon: GitBranch },
-  { id: 'mermaid_flows', code: '02', label: 'Mermaid Diagrams', icon: Compass },
-  { id: 'modules', code: '03', label: 'Modules Breakdown', icon: FolderTree },
-  { id: 'tradeoffs', code: '04', label: 'Decisions & Tradeoffs', icon: Scale },
-  { id: 'interview_cheatsheet', code: '05', label: 'STAR Cheatsheet', icon: GraduationCap },
-  { id: 'api_specs', code: '06', label: 'API & Data Contracts', icon: FileCode },
+  { id: 'architecture', num: '01', label: 'Architecture & Design', icon: GitBranch },
+  { id: 'mermaid_flows', num: '02', label: 'System Schematics', icon: Compass },
+  { id: 'modules', num: '03', label: 'Modules Directory', icon: FolderTree },
+  { id: 'tradeoffs', num: '04', label: 'Tradeoffs & Decisions', icon: Scale },
+  { id: 'interview_cheatsheet', num: '05', label: 'STAR Master Cheatsheet', icon: GraduationCap },
+  { id: 'api_specs', num: '06', label: 'API & Data Contracts', icon: FileCode },
 ];
 
 export default function Documentation({ project }) {
@@ -99,58 +99,59 @@ export default function Documentation({ project }) {
 
   if (!project) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center text-steel-500 font-mono">
-        <FileText size={32} className="text-steel-600 mb-2" />
-        <h3 className="text-xs font-bold text-steel-300 uppercase tracking-wider">NO_TARGET_REPOSITORY</h3>
-        <p className="text-[11px] max-w-sm mt-1">Mount a target codebase to generate structural documentation & Mermaid blueprints.</p>
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center text-zinc-500 font-sans">
+        <h3 className="text-lg font-serif font-bold text-white mb-2">No Subject Selected</h3>
+        <p className="text-xs text-zinc-400 max-w-sm">Select a project repository to explore architectural documentation and schematics.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-[#07080c] overflow-hidden">
-      {/* Top Action Bar */}
-      <div className="px-5 py-2.5 bg-[#090b12] border-b border-[#181c2b] flex items-center justify-between gap-3 flex-wrap font-mono">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-[#09090b] overflow-hidden font-sans">
+      {/* Top Editorial Action Bar */}
+      <div className="px-6 py-4 bg-[#0d0d11] border-b border-white/[0.08] flex items-center justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-blue-400 font-bold text-xs uppercase tracking-wider">DOC_STUDIO</span>
-            <span className="text-steel-600">//</span>
-            <span className="text-white text-xs font-sans font-semibold">{project.name}</span>
+            <span className="text-[10px] uppercase font-sans tracking-widest text-amber-200/80 font-semibold">
+              Architectural Dossier
+            </span>
+            <span className="text-zinc-600">•</span>
+            <span className="text-white font-serif font-bold text-base">{project.name}</span>
           </div>
-          <p className="text-[10px] text-steel-500">
-            Export-grade architectural blueprints, data flow diagrams & interview packs.
+          <p className="text-xs text-zinc-400 mt-0.5">
+            System blueprints, component relationships, tradeoffs & interview cheat-sheets.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {/* Export ZIP */}
           <a
             href={docApi.exportZipUrl(project.id)}
             download
-            className="btn-mechanical flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] text-steel-300 hover:text-white transition"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#141418] hover:bg-[#1a1a20] text-zinc-300 text-xs font-medium border border-white/10 transition"
           >
-            <Download size={12} />
-            <span>EXPORT_ZIP</span>
+            <Download size={13} />
+            <span>Export Suite (.zip)</span>
           </a>
 
           {/* Generate All */}
           <button
             onClick={() => handleGenerate('all')}
             disabled={generatingTab !== null}
-            className="btn-tactical-blue flex items-center gap-1.5 px-3 py-1 rounded text-white text-[11px] font-semibold transition disabled:opacity-50"
+            className="btn-editorial-primary flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition disabled:opacity-50"
           >
             {generatingTab === 'all' ? (
-              <Loader2 size={12} className="animate-spin" />
+              <Loader2 size={13} className="animate-spin" />
             ) : (
-              <Terminal size={12} />
+              <Sparkles size={13} />
             )}
-            <span>{generatingTab === 'all' ? 'COMPILING_SUITE...' : 'GENERATE_ALL_DOCS'}</span>
+            <span>{generatingTab === 'all' ? 'Compiling All...' : 'Generate All Documents'}</span>
           </button>
         </div>
       </div>
 
-      {/* Document Category Tabs */}
-      <div className="flex border-b border-[#181c2b] bg-[#07080d] px-5 overflow-x-auto scrollbar-none font-mono">
+      {/* Editorial Chapter Tabs */}
+      <div className="flex border-b border-white/[0.08] bg-[#0b0b0e] px-6 overflow-x-auto scrollbar-none">
         {DOC_TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -160,17 +161,17 @@ export default function Documentation({ project }) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-3 py-2 text-xs border-b-2 whitespace-nowrap transition ${
+              className={`flex items-center gap-2.5 px-4 py-3.5 text-xs font-medium border-b-2 whitespace-nowrap transition ${
                 isActive
-                  ? 'border-blue-500 text-blue-400 bg-[#101422] font-semibold'
-                  : 'border-transparent text-steel-500 hover:text-steel-300 hover:bg-[#0c0e16]'
+                  ? 'border-white text-white font-semibold'
+                  : 'border-transparent text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              <span className={`text-[10px] ${isActive ? 'text-blue-400' : 'text-steel-600'}`}>
-                {tab.code}
+              <span className={`text-[10px] font-mono ${isActive ? 'text-amber-200' : 'text-zinc-500'}`}>
+                {tab.num}
               </span>
-              <Icon size={13} />
-              <span className="font-sans text-[12px]">{tab.label}</span>
+              <Icon size={14} />
+              <span className="text-[13px]">{tab.label}</span>
               {hasContent && (
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
               )}
@@ -180,93 +181,102 @@ export default function Documentation({ project }) {
       </div>
 
       {/* Document Content View */}
-      <div className="flex-1 overflow-y-auto p-5 sm:p-8">
+      <div className="flex-1 overflow-y-auto p-6 sm:p-10">
         <div className="max-w-4xl mx-auto">
           {currentDoc ? (
-            <div className="dev-card rounded-md p-6 sm:p-8 border border-[#1b2030]">
-              {/* Doc Title & Toolbar */}
-              <div className="flex items-center justify-between border-b border-[#181c2b] pb-3 mb-6 font-mono">
+            <div className="rounded-2xl p-8 sm:p-10 bg-[#121217] border border-white/[0.08] shadow-2xl space-y-6">
+              {/* Document Header */}
+              <div className="flex items-center justify-between border-b border-white/[0.08] pb-5 mb-8">
                 <div>
-                  <div className="text-[10px] text-blue-400 uppercase tracking-widest">SPECIFICATION_FILE</div>
-                  <h3 className="text-base font-bold text-white font-sans mt-0.5">{currentDoc.title}</h3>
-                  <span className="text-[10px] text-steel-500">
-                    LAST_SYNC: {new Date(currentDoc.updated_at).toLocaleDateString()}
+                  <span className="text-[10px] uppercase font-sans tracking-widest text-amber-200/80 font-semibold block mb-1">
+                    Document Entry // {DOC_TABS.find((t) => t.id === activeTab)?.num}
+                  </span>
+                  <h3 className="text-2xl font-serif font-bold text-white tracking-tight">
+                    {currentDoc.title}
+                  </h3>
+                  <span className="text-xs text-zinc-500 mt-1 block">
+                    Last compiled on {new Date(currentDoc.updated_at).toLocaleDateString()}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={handleCopy}
-                    className="btn-mechanical flex items-center gap-1 px-2.5 py-1 rounded text-steel-300 text-[11px] transition"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 text-xs transition"
                   >
-                    {copied ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
-                    <span>{copied ? 'COPIED' : 'COPY_MD'}</span>
+                    {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                    <span>{copied ? 'Copied' : 'Copy'}</span>
                   </button>
 
                   <button
                     onClick={() => handleGenerate(activeTab)}
                     disabled={generatingTab !== null}
-                    className="btn-mechanical flex items-center gap-1 px-2.5 py-1 rounded text-steel-300 text-[11px] transition disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 text-xs transition disabled:opacity-50"
                   >
                     <RefreshCw
-                      size={11}
+                      size={13}
                       className={generatingTab === activeTab ? 'animate-spin' : ''}
                     />
-                    <span>RECOMPILE</span>
+                    <span>Recompile</span>
                   </button>
                 </div>
               </div>
 
               {/* Render Mermaid Diagrams if present */}
               {mermaidCharts.length > 0 && (
-                <div className="mb-6 space-y-3 font-mono">
-                  <div className="text-[10px] uppercase tracking-widest text-steel-500 flex items-center justify-between border-b border-[#181c2b] pb-1">
-                    <span>Visual Architecture Schematics</span>
-                    <span>[{mermaidCharts.length}]</span>
+                <div className="my-8 space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/[0.08] pb-2">
+                    <span className="text-xs font-serif font-bold text-white uppercase tracking-wider">
+                      Architectural Schematics
+                    </span>
+                    <span className="text-xs text-zinc-500 font-mono">
+                      {mermaidCharts.length} diagram{mermaidCharts.length > 1 ? 's' : ''}
+                    </span>
                   </div>
                   {mermaidCharts.map((chart, idx) => (
                     <MermaidViewer
                       key={idx}
                       chartCode={chart}
-                      title={`SCHEMATIC_0${idx + 1}`}
+                      title={`Figure ${idx + 1} — System Topography`}
                     />
                   ))}
                 </div>
               )}
 
-              {/* Render Markdown Content */}
-              <div className="prose prose-invert prose-sm max-w-none prose-headings:font-mono prose-headings:text-white prose-pre:bg-[#07080d] prose-pre:border prose-pre:border-[#1d2234] prose-table:border-[#1e2336] font-sans">
+              {/* Markdown Body */}
+              <div className="editorial-prose font-sans">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {currentDoc.content}
                 </ReactMarkdown>
               </div>
             </div>
           ) : (
-            <div className="dev-card rounded-md p-10 text-center border border-[#1b2030] my-6 font-mono">
-              <div className="w-10 h-10 rounded bg-[#101422] text-blue-400 border border-[#20273c] mx-auto flex items-center justify-center mb-3">
-                <FileText size={18} />
+            /* Elegant Editorial Empty State */
+            <div className="rounded-2xl p-12 text-center bg-[#121217] border border-white/[0.08] my-8 space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/10 mx-auto flex items-center justify-center text-amber-200">
+                <BookOpen size={22} />
               </div>
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                DOCUMENT_NOT_COMPILED // {DOC_TABS.find((t) => t.id === activeTab)?.code}
+              <h3 className="text-xl font-serif font-bold text-white tracking-tight">
+                {DOC_TABS.find((t) => t.id === activeTab)?.label} Not Compiled Yet
               </h3>
-              <p className="text-xs text-steel-400 mt-1 max-w-md mx-auto font-sans leading-relaxed">
-                Compile this specification to extract AST relationships, component boundaries, and interview answers.
+              <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
+                Compile this entry to generate comprehensive system designs, data flow models, and technical talking points.
               </p>
 
               <button
                 onClick={() => handleGenerate(activeTab)}
                 disabled={generatingTab !== null}
-                className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded btn-tactical-blue text-white text-xs font-semibold transition disabled:opacity-50"
+                className="btn-editorial-primary mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold transition disabled:opacity-50"
               >
                 {generatingTab === activeTab ? (
-                  <Loader2 size={13} className="animate-spin" />
+                  <Loader2 size={14} className="animate-spin" />
                 ) : (
-                  <Terminal size={13} />
+                  <Sparkles size={14} />
                 )}
                 <span>
                   {generatingTab === activeTab
-                    ? 'COMPILING_ANALYSIS...'
-                    : `COMPILE_${DOC_TABS.find((t) => t.id === activeTab)?.id.toUpperCase()}`}
+                    ? 'Synthesizing Codebase...'
+                    : `Compile ${DOC_TABS.find((t) => t.id === activeTab)?.label}`}
                 </span>
               </button>
             </div>

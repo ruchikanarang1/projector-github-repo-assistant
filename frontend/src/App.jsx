@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import MobileNav from './components/MobileNav';
 import PwaInstallPrompt from './components/PwaInstallPrompt';
 import RepoSelectorModal from './components/RepoSelectorModal';
+import GitHubConnectModal from './components/GitHubConnectModal';
 
 import TalkToRepo from './pages/TalkToRepo';
 import Documentation from './pages/Documentation';
@@ -17,7 +18,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('talk');
   const [projects, setProjects] = useState([]);
   const [currentProject, setCurrentProject] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRepoModalOpen, setIsRepoModalOpen] = useState(false);
+  const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export default function App() {
           setProjects([sample]);
           setCurrentProject(sample);
         } catch (e) {
-          setIsModalOpen(true);
+          setIsRepoModalOpen(true);
         }
       }
     } catch (err) {
@@ -66,16 +68,17 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07080c] text-steel-200 flex flex-col font-sans selection:bg-[#2563eb] selection:text-white">
-      {/* Precision Top Navbar */}
+    <div className="min-h-screen bg-[#09090b] text-zinc-200 flex flex-col font-sans selection:bg-[#e4d3b6] selection:text-[#09090b]">
+      {/* Editorial Navbar */}
       <Navbar
         currentProject={currentProject}
-        onOpenRepoModal={() => setIsModalOpen(true)}
+        onOpenRepoModal={() => setIsRepoModalOpen(true)}
+        onOpenGitHubModal={() => setIsGitHubModalOpen(true)}
         onNavigate={(tab) => setActiveTab(tab)}
         activeTab={activeTab}
       />
 
-      {/* Main Workspace Body */}
+      {/* Main Body */}
       <div className="flex-1 flex overflow-hidden">
         <Sidebar
           activeTab={activeTab}
@@ -83,7 +86,7 @@ export default function App() {
           currentProject={currentProject}
         />
 
-        <main className="flex-1 flex flex-col overflow-hidden pb-14 md:pb-0 bg-[#07080c]">
+        <main className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0 bg-[#09090b]">
           {activeTab === 'talk' && <TalkToRepo project={currentProject} />}
           {activeTab === 'docs' && <Documentation project={currentProject} />}
           {activeTab === 'interview' && <InterviewPrep project={currentProject} />}
@@ -92,16 +95,23 @@ export default function App() {
         </main>
       </div>
 
-      {/* Mobile Tactical Bottom Navigation */}
+      {/* Mobile Navigation */}
       <MobileNav activeTab={activeTab} onSelectTab={(tab) => setActiveTab(tab)} />
 
-      {/* Codebase Mount Modal */}
+      {/* Codebase Switcher Modal */}
       <RepoSelectorModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isRepoModalOpen}
+        onClose={() => setIsRepoModalOpen(false)}
         onProjectSelected={handleSelectProject}
         currentProjectId={currentProject?.id}
         projects={projects}
+      />
+
+      {/* Dedicated GitHub Account & Repository Connect Modal */}
+      <GitHubConnectModal
+        isOpen={isGitHubModalOpen}
+        onClose={() => setIsGitHubModalOpen(false)}
+        onProjectImported={handleSelectProject}
       />
 
       {/* PWA Home Screen Installation Prompt */}
