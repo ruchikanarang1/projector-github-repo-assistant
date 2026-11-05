@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   X, Github, Search, Star, Lock, Globe, ArrowRight, Loader2, LogOut, Check,
-  ExternalLink, Sparkles, Key, Smartphone, Layers, RefreshCw, Filter
+  ExternalLink, Sparkles, Key, Layers, RefreshCw, Filter, ShieldCheck, HelpCircle
 } from 'lucide-react';
 import { authApi, projectApi, settingsApi } from '../api/client';
 
@@ -12,7 +12,6 @@ export default function GitHubConnectModal({
   onSelectProject,
   onProjectImported
 }) {
-  const [authTab, setAuthTab] = useState('sso'); // 'sso' | 'token'
   const [tokenInput, setTokenInput] = useState('');
   const [userProfile, setUserProfile] = useState(null);
   const [repos, setRepos] = useState([]);
@@ -21,18 +20,12 @@ export default function GitHubConnectModal({
   const [loading, setLoading] = useState(false);
   const [importingRepoUrl, setImportingRepoUrl] = useState(null);
   const [error, setError] = useState(null);
-
-  // Device Flow State
-  const [deviceFlow, setDeviceFlow] = useState(null);
-  const [isPolling, setIsPolling] = useState(false);
-  const [pollIntervalId, setPollIntervalId] = useState(null);
+  const [showOAuthDetails, setShowOAuthDetails] = useState(false);
 
   // Load existing session on open
   useEffect(() => {
     if (isOpen) {
       checkExistingSession();
-    } else {
-      stopPolling();
     }
   }, [isOpen]);
 
@@ -58,63 +51,11 @@ export default function GitHubConnectModal({
     }
   };
 
-  const stopPolling = () => {
-    if (pollIntervalId) {
-      clearInterval(pollIntervalId);
-      setPollIntervalId(null);
-    }
-    setIsPolling(false);
-  };
-
-  // 1. SSO Device Flow Initiate
-  const handleStartDeviceSSO = async () => {
-    setLoading(true);
-    setError(null);
-    stopPolling();
-    try {
-      const config = await authApi.getConfig();
-      if (!config.oauth_configured) {
-        setError('GitHub OAuth client credentials are not configured in backend/.env. Use Personal Access Token SSO below or add GITHUB_CLIENT_ID.');
-        setLoading(false);
-        return;
-      }
-
-      const flowData = await authApi.startDeviceFlow();
-      setDeviceFlow(flowData);
-      setLoading(false);
-      setIsPolling(true);
-
-      // Start Polling GitHub for approval
-      const intervalSec = flowData.interval || 5;
-      const id = setInterval(async () => {
-        try {
-          const res = await authApi.pollDeviceFlow(flowData.device_code);
-          if (res.status === 'complete' && res.access_token) {
-            clearInterval(id);
-            setIsPolling(false);
-            setDeviceFlow(null);
-            localStorage.setItem('projector_gh_token', res.access_token);
-            setUserProfile(res.user);
-            // Load repos
-            const repoList = await authApi.getRepos();
-            setRepos(repoList || []);
-          }
-        } catch (pollErr) {
-          console.warn('Polling check:', pollErr);
-        }
-      }, intervalSec * 1000);
-
-      setPollIntervalId(id);
-    } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Failed to initiate GitHub SSO.');
-      setLoading(false);
-    }
-  };
-
-  // 2. Direct Token Login
-  const handleTokenLogin = async (e) => {
-    e.preventDefault();
+  // Direct 1-Click Connect
+  const handleConnect = async (e) => {
+    if (e) e.preventDefault();
     if (!tokenInput.trim()) return;
+
     setLoading(true);
     setError(null);
     try {
@@ -134,12 +75,10 @@ export default function GitHubConnectModal({
 
   // Sign out
   const handleSignOut = () => {
-    stopPolling();
     localStorage.removeItem('projector_gh_token');
     localStorage.removeItem('github_token');
     setUserProfile(null);
     setRepos([]);
-    setDeviceFlow(null);
     settingsApi.update({ github_token: '' }).catch(() => {});
   };
 
@@ -150,7 +89,6 @@ export default function GitHubConnectModal({
     );
 
     if (existing) {
-      // Already imported - switch to this workspace immediately
       if (onSelectProject) onSelectProject(existing);
       onClose();
       return;
@@ -203,14 +141,16 @@ export default function GitHubConnectModal({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-serif font-bold text-white tracking-tight">
-                  GitHub SSO & Workspace Provisioner
+                  GitHub Sign In & Workspaces
                 </h2>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-200/10 text-amber-200 border border-amber-200/20">
-                  SSO Authenticated
-                </span>
+                {userProfile && (
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/40 text-emerald-300 border border-emerald-800/30">
+                    Connected as @{userProfile.login}
+                  </span>
+                )}
               </div>
               <p className="text-xs text-zinc-400 mt-0.5">
-                Sign in to list all your personal & organization projects. Each project provisions as a dedicated conversational workspace.
+                Connect your GitHub account to list all your personal & organization projects. Each project acts as an isolated conversational workspace.
               </p>
             </div>
           </div>
@@ -234,7 +174,7 @@ export default function GitHubConnectModal({
           {/* STATE 1: Authenticated User Header & Workspace Repositories List */}
           {userProfile ? (
             <div className="space-y-6">
-              {/* Profile Bar */}
+              {/* Profile Card */}
               <div className="p-4 rounded-xl bg-[#14141a] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
                   <img
@@ -336,7 +276,7 @@ export default function GitHubConnectModal({
                 {loading && repos.length === 0 ? (
                   <div className="py-12 text-center text-xs text-zinc-400 flex flex-col items-center gap-2">
                     <Loader2 size={18} className="animate-spin text-amber-200" />
-                    <span>Fetching repositories from GitHub SSO...</span>
+                    <span>Fetching repositories from GitHub...</span>
                   </div>
                 ) : filteredRepos.length === 0 ? (
                   <div className="py-12 text-center text-xs text-zinc-500 border border-dashed border-white/10 rounded-xl">
@@ -427,164 +367,104 @@ export default function GitHubConnectModal({
               </div>
             </div>
           ) : (
-            /* STATE 2: Unauthenticated SSO & Login Selection */
+            /* STATE 2: Fast 1-Click GitHub Connect (Zero Setup Required) */
             <div className="space-y-6">
-              {/* Tab Selector */}
-              <div className="flex border-b border-white/10 text-xs">
-                <button
-                  onClick={() => setAuthTab('sso')}
-                  className={`pb-3 px-4 font-serif font-bold transition border-b-2 flex items-center gap-2 ${
-                    authTab === 'sso'
-                      ? 'border-amber-200 text-white'
-                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  <Smartphone size={14} />
-                  <span>Single Sign-On (GitHub OAuth / Device)</span>
-                </button>
-                <button
-                  onClick={() => setAuthTab('token')}
-                  className={`pb-3 px-4 font-serif font-bold transition border-b-2 flex items-center gap-2 ${
-                    authTab === 'token'
-                      ? 'border-amber-200 text-white'
-                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  <Key size={14} />
-                  <span>Personal Access Token</span>
-                </button>
-              </div>
+              <div className="p-6 rounded-2xl bg-[#14141a] border border-white/10 space-y-5">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/15 flex items-center justify-center text-white shrink-0">
+                    <Github size={26} />
+                  </div>
+                  <div>
+                    <h3 className="font-serif font-bold text-white text-lg tracking-tight">
+                      Fast 1-Click GitHub Connect
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                      Zero configuration required. Connect your GitHub account directly to list and talk to all your public and private project repositories.
+                    </p>
+                  </div>
+                </div>
 
-              {/* TAB 1: GitHub SSO */}
-              {authTab === 'sso' && (
-                <div className="space-y-5 py-2">
-                  <div className="p-5 rounded-2xl bg-[#14141a] border border-white/10 text-center space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-white/[0.06] border border-white/15 flex items-center justify-center mx-auto text-white">
-                      <Github size={26} />
-                    </div>
+                {/* Step 1 & 2 Action Flow */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  <div className="p-4 rounded-xl bg-[#09090b] border border-white/[0.08] flex flex-col justify-between">
                     <div>
-                      <h3 className="font-serif font-bold text-white text-base">
-                        Authenticate with GitHub SSO
-                      </h3>
-                      <p className="text-xs text-zinc-400 max-w-md mx-auto mt-1 leading-relaxed">
-                        One-click sign in. Grants Projector read-only access to list your public and private repositories and ingest code into local workspaces.
+                      <span className="text-[10px] font-sans uppercase tracking-widest text-amber-200 font-semibold block mb-1">
+                        Step 1: Authorize on GitHub
+                      </span>
+                      <p className="text-xs text-zinc-400 leading-relaxed">
+                        Opens GitHub with the exact permissions (<code className="text-white font-mono">repo</code>, <code className="text-white font-mono">read:user</code>) pre-filled.
                       </p>
                     </div>
 
-                    {deviceFlow ? (
-                      /* Active Device Flow Display */
-                      <div className="p-4 rounded-xl bg-[#181822] border border-amber-200/30 text-left space-y-3 animate-in fade-in">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-sans uppercase tracking-widest text-amber-200 font-semibold">
-                            Verification Code
-                          </span>
-                          <span className="text-xs text-zinc-400 flex items-center gap-1.5 font-mono">
-                            <Loader2 size={12} className="animate-spin text-amber-200" />
-                            Awaiting authorization...
-                          </span>
-                        </div>
-
-                        <div className="text-center py-3 bg-[#0e0e14] rounded-lg border border-white/10">
-                          <span className="text-2xl font-mono font-bold tracking-widest text-white selection:bg-amber-200 selection:text-black">
-                            {deviceFlow.user_code}
-                          </span>
-                        </div>
-
-                        <p className="text-xs text-zinc-400 text-center">
-                          Copy the code above and enter it at GitHub's authorization page.
-                        </p>
-
-                        <a
-                          href={deviceFlow.verification_uri || 'https://github.com/login/device'}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="w-full btn-editorial-primary py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition"
-                        >
-                          <span>Open GitHub Verification Page</span>
-                          <ExternalLink size={13} />
-                        </a>
-                      </div>
-                    ) : (
-                      <div className="pt-2">
-                        <button
-                          onClick={handleStartDeviceSSO}
-                          disabled={loading}
-                          className="btn-editorial-primary px-6 py-2.5 rounded-full text-xs font-semibold flex items-center gap-2 mx-auto shadow-md"
-                        >
-                          {loading ? (
-                            <>
-                              <Loader2 size={14} className="animate-spin" />
-                              <span>Connecting to GitHub...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Github size={15} />
-                              <span>Sign in with GitHub (SSO)</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="text-center">
-                    <span className="text-xs text-zinc-500">
-                      Need instant access without setting up an OAuth App? Use the <strong>Personal Access Token</strong> tab.
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 2: Personal Access Token */}
-              {authTab === 'token' && (
-                <form onSubmit={handleTokenLogin} className="space-y-4 py-2">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-zinc-300 block">
-                      GitHub Personal Access Token (Classic or Fine-Grained)
-                    </label>
-                    <input
-                      type="password"
-                      value={tokenInput}
-                      onChange={(e) => setTokenInput(e.target.value)}
-                      placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                      className="w-full px-4 py-2.5 bg-[#14141a] border border-white/10 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-200/50 font-mono"
-                    />
-                    <p className="text-[11px] text-zinc-500 leading-relaxed">
-                      Requires <code className="text-zinc-300">repo</code> (Full control of private repositories) and <code className="text-zinc-300">read:user</code> scopes. Tokens are stored securely in your browser's local environment.
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
                     <a
-                      href="https://github.com/settings/tokens/new?scopes=repo,read:user&description=Projector%20AI%20Companion"
+                      href="https://github.com/settings/tokens/new?scopes=repo,read:user&description=Projector%20AI%20Workspace"
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs text-amber-200/80 hover:text-amber-200 flex items-center gap-1 transition"
+                      className="mt-4 btn-editorial-primary py-2 px-4 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition"
                     >
-                      <span>Generate Token on GitHub</span>
-                      <ExternalLink size={12} />
+                      <span>1-Click Authorize on GitHub</span>
+                      <ExternalLink size={13} />
                     </a>
-
-                    <button
-                      type="submit"
-                      disabled={loading || !tokenInput.trim()}
-                      className="btn-editorial-primary px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50"
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 size={13} className="animate-spin" />
-                          <span>Verifying...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>Connect Token</span>
-                          <ArrowRight size={13} />
-                        </>
-                      )}
-                    </button>
                   </div>
-                </form>
-              )}
+
+                  <div className="p-4 rounded-xl bg-[#09090b] border border-white/[0.08] flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-sans uppercase tracking-widest text-amber-200 font-semibold block mb-1">
+                        Step 2: Complete Sign In
+                      </span>
+                      <p className="text-xs text-zinc-400 leading-relaxed">
+                        Click "Generate token" on GitHub, copy the key, and paste it below:
+                      </p>
+                    </div>
+
+                    <form onSubmit={handleConnect} className="mt-3 flex items-center gap-2">
+                      <input
+                        type="password"
+                        value={tokenInput}
+                        onChange={(e) => setTokenInput(e.target.value)}
+                        placeholder="ghp_xxxx..."
+                        className="flex-1 px-3 py-2 bg-[#14141a] border border-white/15 focus:border-amber-200/50 rounded-lg text-xs text-white placeholder-zinc-500 font-mono focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={loading || !tokenInput.trim()}
+                        className="btn-editorial-primary px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50"
+                      >
+                        {loading ? <Loader2 size={13} className="animate-spin" /> : <span>Sign In</span>}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-[11px] text-zinc-500 pt-1">
+                  <ShieldCheck size={14} className="text-emerald-400 shrink-0" />
+                  <span>
+                    Your key is saved locally in your browser's encrypted environment. No credentials are transmitted to any third-party servers.
+                  </span>
+                </div>
+              </div>
+
+              {/* Optional OAuth Explanation Toggle */}
+              <div className="text-center">
+                <button
+                  onClick={() => setShowOAuthDetails(!showOAuthDetails)}
+                  className="text-xs text-zinc-500 hover:text-zinc-300 transition inline-flex items-center gap-1"
+                >
+                  <HelpCircle size={12} />
+                  <span>Why does GitHub work this way compared to Google?</span>
+                </button>
+
+                {showOAuthDetails && (
+                  <div className="mt-3 p-4 rounded-xl bg-[#121217] border border-white/[0.08] text-left text-xs text-zinc-400 space-y-2 animate-in fade-in">
+                    <p className="leading-relaxed">
+                      <strong>How Local Tools Differ From Hosted Websites:</strong> On public websites (like Spotify or Canva), the company hosts a centralized server with their own pre-registered Google/GitHub OAuth credentials.
+                    </p>
+                    <p className="leading-relaxed">
+                      When running self-hosted or local developer tools on <code className="text-white font-mono">localhost</code> (like Git, VS Code, or Projector), GitHub uses direct developer authorization tokens to grant you full access to both private and public codebases without forcing you to set up corporate redirect URIs or reverse proxies.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
