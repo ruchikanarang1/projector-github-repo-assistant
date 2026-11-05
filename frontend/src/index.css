@@ -4,44 +4,100 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 font-sans;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    @apply bg-obsidian-950 text-steel-200 antialiased;
+    font-family: 'Space Grotesk', -apple-system, sans-serif;
+    letter-spacing: -0.015em;
   }
 
-  code, pre {
+  code, pre, .font-mono {
     font-family: 'JetBrains Mono', monospace;
+    letter-spacing: -0.02em;
   }
 }
 
-/* Custom Scrollbars */
+/* Precision Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: #090a0f;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.4);
-  border-radius: 4px;
+  background: #222638;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.6);
+  background: #3b82f6;
 }
 
-/* Card glassmorphism */
-.glass-panel {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Precision Engineering UI Panels */
+.dev-card {
+  background: #0d0e16;
+  border: 1px solid #1e2235;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
 }
 
-.glass-panel-subtle {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+.dev-card-interactive {
+  background: #0d0e16;
+  border: 1px solid #1e2235;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dev-card-interactive:hover {
+  background: #12141f;
+  border-color: #2e3552;
+}
+
+.dev-card-subtle {
+  background: #0a0b12;
+  border: 1px solid #191c2b;
+}
+
+/* Engineering Technical Header Grid */
+.blueprint-grid {
+  background-size: 24px 24px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+.micro-grid {
+  background-size: 12px 12px;
+  background-image: 
+    radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+}
+
+/* Mechanical Keyboard / Terminal Button Feeling */
+.btn-mechanical {
+  background: #141724;
+  border: 1px solid #282f48;
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset, 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  transition: all 0.1s ease;
+}
+
+.btn-mechanical:hover {
+  background: #1a1e30;
+  border-color: #3b456a;
+}
+
+.btn-mechanical:active {
+  transform: translateY(1px);
+  box-shadow: 0 0 0 0 transparent;
+}
+
+.btn-tactical-blue {
+  background: #1d4ed8;
+  border: 1px solid #3b82f6;
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.2) inset, 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+}
+
+.btn-tactical-blue:hover {
+  background: #2563eb;
+  border-color: #60a5fa;
 }
 
 /* Flashcard 3D flip */
@@ -59,4 +115,31 @@
 
 .rotate-y-180 {
   transform: rotateY(180deg);
+}
+
+/* Corner bracket crosshairs */
+.corner-bracket {
+  position: relative;
+}
+
+.corner-bracket::before {
+  content: '+';
+  position: absolute;
+  top: -6px;
+  left: -5px;
+  font-family: monospace;
+  font-size: 10px;
+  color: #475569;
+  line-height: 1;
+}
+
+.corner-bracket::after {
+  content: '+';
+  position: absolute;
+  bottom: -6px;
+  right: -5px;
+  font-family: monospace;
+  font-size: 10px;
+  color: #475569;
+  line-height: 1;
 }

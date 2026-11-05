@@ -14,7 +14,7 @@ import Settings from './pages/Settings';
 import { projectApi } from './api/client';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('talk'); // 'talk', 'docs', 'interview', 'code', 'settings'
+  const [activeTab, setActiveTab] = useState('talk');
   const [projects, setProjects] = useState([]);
   const [currentProject, setCurrentProject] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,11 +31,9 @@ export default function App() {
       setProjects(list || []);
 
       if (list && list.length > 0) {
-        // Load active project details
         const full = await projectApi.get(list[0].id);
         setCurrentProject(full);
       } else {
-        // Auto-initialize sample project so the app is instantly rich and usable!
         try {
           const sample = await projectApi.createSample();
           setProjects([sample]);
@@ -45,7 +43,7 @@ export default function App() {
         }
       }
     } catch (err) {
-      console.warn('Could not load projects (running offline or backend starting):', err);
+      console.warn('Offline or initializing:', err);
     } finally {
       setLoading(false);
     }
@@ -55,7 +53,6 @@ export default function App() {
     try {
       const full = await projectApi.get(proj.id);
       setCurrentProject(full);
-      // update projects list if newly added
       setProjects((prev) => {
         if (!prev.some((p) => p.id === full.id)) {
           return [full, ...prev];
@@ -69,8 +66,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-brand-600 selection:text-white">
-      {/* Top Navbar */}
+    <div className="min-h-screen bg-[#07080c] text-steel-200 flex flex-col font-sans selection:bg-[#2563eb] selection:text-white">
+      {/* Precision Top Navbar */}
       <Navbar
         currentProject={currentProject}
         onOpenRepoModal={() => setIsModalOpen(true)}
@@ -78,7 +75,7 @@ export default function App() {
         activeTab={activeTab}
       />
 
-      {/* Main Body with Sidebar + Active View */}
+      {/* Main Workspace Body */}
       <div className="flex-1 flex overflow-hidden">
         <Sidebar
           activeTab={activeTab}
@@ -86,7 +83,7 @@ export default function App() {
           currentProject={currentProject}
         />
 
-        <main className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
+        <main className="flex-1 flex flex-col overflow-hidden pb-14 md:pb-0 bg-[#07080c]">
           {activeTab === 'talk' && <TalkToRepo project={currentProject} />}
           {activeTab === 'docs' && <Documentation project={currentProject} />}
           {activeTab === 'interview' && <InterviewPrep project={currentProject} />}
@@ -95,10 +92,10 @@ export default function App() {
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Tactical Bottom Navigation */}
       <MobileNav activeTab={activeTab} onSelectTab={(tab) => setActiveTab(tab)} />
 
-      {/* Ingestion & Switcher Modal */}
+      {/* Codebase Mount Modal */}
       <RepoSelectorModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

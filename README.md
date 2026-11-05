@@ -189,3 +189,4 @@ Copy `backend/.env.example` to `backend/.env` (or configure via the in-app **Set
 ## 📄 License
 
 MIT License. Free to use, adapt, and deploy for personal and commercial projects.
+

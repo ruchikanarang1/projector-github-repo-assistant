@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Download, X, Smartphone } from 'lucide-react';
+import { Download, X, Smartphone, Cpu } from 'lucide-react';
 
 export default function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -9,7 +9,6 @@ export default function PwaInstallPrompt() {
     const handleBeforeInstall = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      // Check if user dismissed it recently
       const dismissed = localStorage.getItem('pwa_prompt_dismissed');
       if (!dismissed) {
         setVisible(true);
@@ -18,7 +17,6 @@ export default function PwaInstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
-    // If running in standalone mode (already installed), don't show
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setVisible(false);
     }
@@ -44,33 +42,36 @@ export default function PwaInstallPrompt() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-16 sm:bottom-6 right-4 left-4 sm:left-auto sm:max-w-md z-40 animate-in slide-in-from-bottom-5">
-      <div className="glass-panel p-4 rounded-2xl shadow-2xl border border-brand-500/30 flex items-center justify-between gap-3 bg-slate-900/95">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-brand-500/20 text-brand-400 border border-brand-500/30">
-            <Smartphone size={20} />
+    <div className="fixed bottom-16 sm:bottom-4 right-4 left-4 sm:left-auto sm:max-w-md z-40 animate-in slide-in-from-bottom-5">
+      <div className="p-3.5 rounded-lg bg-[#0d0f17] border border-[#262c42] shadow-2xl flex items-center justify-between gap-3 text-steel-200 font-mono">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded bg-[#131724] text-blue-400 border border-[#222a40]">
+            <Smartphone size={16} />
           </div>
           <div>
-            <h4 className="text-xs font-bold text-slate-100">Install Projector PWA</h4>
-            <p className="text-[11px] text-slate-400 leading-tight">
-              Access your project Q&A & interview prep offline on your mobile home screen.
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-white uppercase">Install PWA Binary</span>
+              <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">STANDALONE</span>
+            </div>
+            <p className="text-[10px] text-steel-500 leading-tight">
+              Cache project specs & interview arena offline on home screen.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={handleInstall}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-medium text-xs transition shadow-md shadow-brand-600/30"
+            className="btn-tactical-blue px-2.5 py-1 rounded text-white text-[11px] font-mono flex items-center gap-1 transition"
           >
-            <Download size={13} />
-            <span>Install</span>
+            <Download size={11} />
+            <span>INSTALL</span>
           </button>
           <button
             onClick={handleDismiss}
-            className="p-1 text-slate-400 hover:text-white rounded-lg transition"
+            className="p-1 text-steel-500 hover:text-white rounded hover:bg-[#181d2c] transition"
           >
-            <X size={16} />
+            <X size={14} />
           </button>
         </div>
       </div>

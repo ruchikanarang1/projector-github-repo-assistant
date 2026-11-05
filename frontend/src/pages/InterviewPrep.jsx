@@ -1,31 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import {
   GraduationCap,
-  Sparkles,
   RotateCw,
   CheckCircle,
-  HelpCircle,
   ChevronLeft,
   ChevronRight,
-  Mic,
-  Send,
   Loader2,
   Award,
   ThumbsUp,
   AlertTriangle,
-  Lightbulb
+  Lightbulb,
+  Terminal,
+  Activity,
+  Layers
 } from 'lucide-react';
 import { interviewApi } from '../api/client';
 import VoicePlayer from '../components/VoicePlayer';
 
 export default function InterviewPrep({ project }) {
-  const [subTab, setSubTab] = useState('flashcards'); // 'flashcards' or 'simulator'
+  const [subTab, setSubTab] = useState('flashcards');
   const [flashcards, setFlashcards] = useState([]);
   const [cardIdx, setCardIdx] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [loadingCards, setLoadingCards] = useState(false);
 
-  // Simulator state
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [userAnswer, setUserAnswer] = useState('');
   const [evaluating, setEvaluating] = useState(false);
@@ -75,7 +73,6 @@ export default function InterviewPrep({ project }) {
       setFlashcards((prev) =>
         prev.map((c, i) => (i === cardIdx ? { ...c, mastery: level } : c))
       );
-      // Advance to next card
       if (cardIdx < flashcards.length - 1) {
         setIsFlipped(false);
         setCardIdx((i) => i + 1);
@@ -110,93 +107,92 @@ export default function InterviewPrep({ project }) {
 
   if (!project) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center text-slate-400">
-        <GraduationCap size={48} className="text-slate-600 mb-3" />
-        <h3 className="text-base font-semibold text-slate-200">No Repository Selected</h3>
-        <p className="text-xs max-w-sm mt-1">Connect a project to unlock repository-specific interview flashcards and mock simulations.</p>
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center text-steel-500 font-mono">
+        <GraduationCap size={32} className="text-steel-600 mb-2" />
+        <h3 className="text-xs font-bold text-steel-300 uppercase tracking-wider">NO_TARGET_REPOSITORY</h3>
+        <p className="text-[11px] max-w-sm mt-1">Mount a codebase to generate project-specific flashcards and interview scoring rubrics.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-950 overflow-hidden">
-      {/* Header */}
-      <div className="px-6 py-3 bg-slate-900/60 border-b border-slate-800 flex items-center justify-between gap-4 flex-wrap">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-[#07080c] overflow-hidden">
+      {/* Precision Header */}
+      <div className="px-5 py-2.5 bg-[#090b12] border-b border-[#181c2b] flex items-center justify-between gap-3 flex-wrap font-mono">
         <div>
-          <h2 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-            <span className="p-1 rounded-md bg-brand-500/20 text-brand-400">
-              <GraduationCap size={16} />
-            </span>
-            Interview Prep Arena: {project.name}
-          </h2>
-          <p className="text-[11px] text-slate-400">
-            Rehearse real technical interview questions & get scored on your answers before talking to recruiters.
+          <div className="flex items-center gap-2">
+            <span className="text-blue-400 font-bold text-xs uppercase tracking-wider">PREP_ARENA</span>
+            <span className="text-steel-600">//</span>
+            <span className="text-white text-xs font-sans font-semibold">{project.name}</span>
+          </div>
+          <p className="text-[10px] text-steel-500">
+            Technical drill simulation, STAR method answers & Staff-level evaluation rubric.
           </p>
         </div>
 
         {/* Sub-tab toggle */}
-        <div className="flex p-1 bg-slate-950/80 rounded-xl border border-slate-800">
+        <div className="flex p-0.5 bg-[#050609] rounded border border-[#1b1f30] text-xs">
           <button
             onClick={() => setSubTab('flashcards')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            className={`px-3 py-1 rounded transition ${
               subTab === 'flashcards'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#141a2e] text-blue-300 border border-blue-500/50 font-semibold'
+                : 'text-steel-500 hover:text-steel-300'
             }`}
           >
-            Flashcard Deck ({flashcards.length})
+            INDEX_DECK [{flashcards.length}]
           </button>
           <button
             onClick={() => setSubTab('simulator')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            className={`px-3 py-1 rounded transition ${
               subTab === 'simulator'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#141a2e] text-blue-300 border border-blue-500/50 font-semibold'
+                : 'text-steel-500 hover:text-steel-300'
             }`}
           >
-            Mock Simulator
+            RUBRIC_SIMULATOR
           </button>
         </div>
       </div>
 
       {/* Content View */}
-      <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+      <div className="flex-1 overflow-y-auto p-5 sm:p-8">
         <div className="max-w-3xl mx-auto">
           {subTab === 'flashcards' && (
-            <div>
-              {/* Mastery Stats Bar */}
-              <div className="flex items-center justify-between mb-6 text-xs text-slate-400">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-200">
-                    Card {flashcards.length > 0 ? cardIdx + 1 : 0} of {flashcards.length}
+            <div className="font-mono">
+              {/* Telemetry Bar */}
+              <div className="flex items-center justify-between mb-4 text-[11px] text-steel-500 border-b border-[#181c2b] pb-2">
+                <div className="flex items-center gap-3">
+                  <span className="font-bold text-steel-200">
+                    CARD {flashcards.length > 0 ? String(cardIdx + 1).padStart(2, '0') : '00'} / {String(flashcards.length).padStart(2, '0')}
                   </span>
                   <span>•</span>
-                  <span className="text-emerald-400 font-medium">
-                    {masteredCount} Mastered
+                  <span className="text-emerald-400 font-semibold">
+                    {masteredCount} MASTERED
                   </span>
                 </div>
 
                 <button
                   onClick={handleGenerateCards}
                   disabled={loadingCards}
-                  className="flex items-center gap-1.5 text-xs text-brand-400 hover:text-brand-300 transition"
+                  className="btn-mechanical flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] text-steel-300 hover:text-white transition"
                 >
-                  <Sparkles size={13} className={loadingCards ? 'animate-spin' : ''} />
-                  <span>Regenerate Cards</span>
+                  <Activity size={11} className={loadingCards ? 'animate-spin' : ''} />
+                  <span>REGENERATE_DECK</span>
                 </button>
               </div>
 
               {/* Progress bar */}
-              <div className="w-full bg-slate-900 rounded-full h-1.5 mb-8 overflow-hidden">
+              <div className="w-full bg-[#0d0f17] rounded-none h-1 mb-8 overflow-hidden border border-[#1a1e2d]">
                 <div
-                  className="bg-brand-500 h-1.5 rounded-full transition-all duration-300"
+                  className="bg-blue-500 h-1 transition-all duration-300"
                   style={{
                     width: `${flashcards.length > 0 ? ((cardIdx + 1) / flashcards.length) * 100 : 0}%`,
                   }}
                 ></div>
               </div>
 
-              {/* 3D Flip Card */}
+              {/* 3D Flip Card styled as Military / Engineering Spec Card */}
               {currentCard ? (
                 <div>
                   <div
@@ -204,57 +200,57 @@ export default function InterviewPrep({ project }) {
                     className="cursor-pointer perspective-1000 min-h-[300px] sm:min-h-[340px]"
                   >
                     <div
-                      className={`relative w-full h-full min-h-[300px] sm:min-h-[340px] rounded-3xl glass-panel border border-slate-700/80 p-8 flex flex-col justify-between transition-transform duration-500 transform-style-3d shadow-2xl ${
-                        isFlipped ? 'rotate-y-180 bg-slate-900/90' : 'bg-gradient-to-br from-slate-900/90 to-slate-950/90'
+                      className={`relative w-full h-full min-h-[300px] sm:min-h-[340px] rounded-lg dev-card border border-[#23293c] p-6 sm:p-8 flex flex-col justify-between transition-transform duration-500 transform-style-3d shadow-2xl ${
+                        isFlipped ? 'rotate-y-180 bg-[#0a0c14]' : 'bg-[#090b12]'
                       }`}
                     >
                       {/* Front of card */}
                       {!isFlipped ? (
                         <div className="flex flex-col justify-between h-full">
-                          <div className="flex items-center justify-between">
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider font-bold bg-brand-500/20 text-brand-300 border border-brand-500/30">
-                              {currentCard.category}
+                          <div className="flex items-center justify-between border-b border-[#181c2b] pb-3">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-widest font-bold bg-[#111626] text-blue-400 border border-[#20273e]">
+                              TOPIC // {currentCard.category}
                             </span>
-                            <span className="text-xs text-slate-500 flex items-center gap-1">
-                              <RotateCw size={12} /> Click to flip
+                            <span className="text-[10px] text-steel-500 flex items-center gap-1">
+                              <RotateCw size={11} /> TAP_TO_REVEAL
                             </span>
                           </div>
 
-                          <div className="my-8">
-                            <h3 className="text-lg sm:text-xl font-bold text-white leading-relaxed">
+                          <div className="my-6">
+                            <h3 className="text-base sm:text-lg font-bold text-white font-sans leading-relaxed">
                               {currentCard.question}
                             </h3>
                           </div>
 
-                          <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-800/80 pt-4">
-                            <span>Topic: {project.name} Architecture</span>
-                            <span className="text-brand-400 font-medium">Tap to reveal ideal answer →</span>
+                          <div className="flex items-center justify-between text-[11px] text-steel-500 border-t border-[#181c2b] pt-3">
+                            <span>TARGET: {project.name}</span>
+                            <span className="text-blue-400 font-mono text-[10px]">CLICK CARD TO REVEAL SPEC →</span>
                           </div>
                         </div>
                       ) : (
                         /* Back of card */
                         <div className="flex flex-col justify-between h-full [transform:rotateY(180deg)]">
-                          <div className="flex items-center justify-between">
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                              Model Answer
+                          <div className="flex items-center justify-between border-b border-[#181c2b] pb-3">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-widest font-bold bg-[#0d1c14] text-emerald-400 border border-[#163825]">
+                              RUBRIC // MODEL_ANSWER
                             </span>
                             <VoicePlayer text={currentCard.answer} />
                           </div>
 
-                          <div className="my-6">
-                            <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-sans">
+                          <div className="my-4">
+                            <p className="text-xs sm:text-sm text-steel-200 leading-relaxed font-sans">
                               {currentCard.answer}
                             </p>
                             {currentCard.code_context && (
-                              <div className="mt-4 p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-mono text-slate-400">
-                                💡 Context: {currentCard.code_context}
+                              <div className="mt-3 p-2.5 rounded bg-[#07080d] border border-[#181d2c] text-[11px] font-mono text-steel-400">
+                                <span className="text-blue-400">CONTEXT &gt;</span> {currentCard.code_context}
                               </div>
                             )}
                           </div>
 
-                          <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-800/80 pt-4">
-                            <span>Ready to grade yourself?</span>
-                            <span className="text-slate-400">Click to flip back</span>
+                          <div className="flex items-center justify-between text-[10px] text-steel-500 border-t border-[#181c2b] pt-3">
+                            <span>REVIEWS: {currentCard.mastery === 2 ? 'MASTERED' : 'IN_PROGRESS'}</span>
+                            <span className="text-steel-400">TAP TO FLIP BACK</span>
                           </div>
                         </div>
                       )}
@@ -262,31 +258,31 @@ export default function InterviewPrep({ project }) {
                   </div>
 
                   {/* Card Controls & Mastery */}
-                  <div className="flex items-center justify-between mt-6 gap-4">
+                  <div className="flex items-center justify-between mt-5 gap-3">
                     <button
                       onClick={() => {
                         setIsFlipped(false);
                         setCardIdx((i) => Math.max(0, i - 1));
                       }}
                       disabled={cardIdx === 0}
-                      className="p-3 rounded-2xl glass-panel hover:bg-slate-800 text-slate-300 disabled:opacity-30 transition"
+                      className="btn-mechanical p-2.5 rounded text-steel-300 disabled:opacity-20 transition"
                     >
-                      <ChevronLeft size={20} />
+                      <ChevronLeft size={16} />
                     </button>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleMastery(1)}
-                        className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-300 transition"
+                        className="btn-mechanical px-3 py-1.5 rounded text-[11px] font-mono text-steel-300 transition"
                       >
-                        Still Learning
+                        STILL_LEARNING
                       </button>
                       <button
                         onClick={() => handleMastery(2)}
-                        className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/20 flex items-center gap-1.5"
+                        className="btn-tactical-blue px-4 py-1.5 rounded text-white text-[11px] font-mono font-bold transition flex items-center gap-1.5"
                       >
-                        <CheckCircle size={14} />
-                        <span>Mastered</span>
+                        <CheckCircle size={13} />
+                        <span>MARK_MASTERED</span>
                       </button>
                     </div>
 
@@ -296,22 +292,22 @@ export default function InterviewPrep({ project }) {
                         setCardIdx((i) => Math.min(flashcards.length - 1, i + 1));
                       }}
                       disabled={cardIdx === flashcards.length - 1}
-                      className="p-3 rounded-2xl glass-panel hover:bg-slate-800 text-slate-300 disabled:opacity-30 transition"
+                      className="btn-mechanical p-2.5 rounded text-steel-300 disabled:opacity-20 transition"
                     >
-                      <ChevronRight size={20} />
+                      <ChevronRight size={16} />
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-12 glass-panel rounded-2xl">
-                  <GraduationCap size={36} className="mx-auto text-slate-500 mb-2" />
-                  <p className="text-sm font-semibold text-slate-300">No Flashcards Generated</p>
+                <div className="text-center py-10 dev-card rounded-md border border-[#1b2030]">
+                  <GraduationCap size={28} className="mx-auto text-steel-600 mb-2" />
+                  <p className="text-xs font-bold text-steel-300 uppercase">NO_CARDS_IN_MEMORY</p>
                   <button
                     onClick={handleGenerateCards}
                     disabled={loadingCards}
-                    className="mt-4 px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-semibold"
+                    className="mt-3 px-3 py-1.5 rounded btn-tactical-blue text-white text-xs font-mono font-semibold"
                   >
-                    Generate Flashcards Now
+                    GENERATE_CARDS_NOW
                   </button>
                 </div>
               )}
@@ -319,14 +315,15 @@ export default function InterviewPrep({ project }) {
           )}
 
           {subTab === 'simulator' && (
-            <div className="space-y-6">
+            <div className="space-y-4 font-mono">
               {/* Question Selection */}
-              <div className="glass-panel p-6 rounded-2xl border border-slate-800">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
-                  Interview Question
-                </label>
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-base font-bold text-white leading-snug">
+              <div className="dev-card p-5 rounded-md border border-[#1b2030]">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-steel-500 mb-2 flex items-center justify-between">
+                  <span>Simulated Technical Question</span>
+                  <span className="text-blue-400">RUBRIC_v1.0</span>
+                </div>
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-sm font-sans font-bold text-white leading-relaxed">
                     {selectedQuestion || 'Select an interview question to simulate'}
                   </h3>
                   {selectedQuestion && <VoicePlayer text={selectedQuestion} />}
@@ -334,21 +331,21 @@ export default function InterviewPrep({ project }) {
 
                 {/* Question switchers */}
                 {flashcards.length > 0 && (
-                  <div className="mt-4 flex gap-1.5 overflow-x-auto pb-1">
-                    {flashcards.slice(0, 5).map((c, i) => (
+                  <div className="mt-4 flex gap-1 overflow-x-auto pb-1 border-t border-[#181c2b] pt-3">
+                    {flashcards.slice(0, 6).map((c, i) => (
                       <button
                         key={c.id}
                         onClick={() => {
                           setSelectedQuestion(c.question);
                           setEvalResult(null);
                         }}
-                        className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap border transition ${
+                        className={`px-2 py-1 rounded text-[10px] font-mono whitespace-nowrap border transition ${
                           selectedQuestion === c.question
-                            ? 'bg-brand-600 text-white border-brand-500'
-                            : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800'
+                            ? 'bg-[#141a2e] text-blue-300 border-blue-500/60 font-semibold'
+                            : 'bg-[#090b12] text-steel-500 border-[#1c2132] hover:bg-[#121626]'
                         }`}
                       >
-                        Q{i + 1}: {c.category}
+                        Q0{i + 1}: {c.category}
                       </button>
                     ))}
                   </div>
@@ -356,74 +353,73 @@ export default function InterviewPrep({ project }) {
               </div>
 
               {/* User Answer Form */}
-              <form onSubmit={handleEvaluate} className="space-y-4">
+              <form onSubmit={handleEvaluate} className="space-y-3 font-mono">
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">
-                    Your Response (Practice explaining your code clearly)
-                  </label>
+                  <div className="flex items-center justify-between text-[10px] text-steel-500 uppercase tracking-widest mb-1">
+                    <span>Your Articulated Response (STAR Format Encouraged)</span>
+                    <span>[MARKDOWN_OK]</span>
+                  </div>
                   <textarea
                     rows={5}
-                    placeholder="In this project, we designed this by... The primary tradeoff was... When errors occur, the system..."
+                    placeholder="In this project, we architected this by... The primary tradeoff was... When errors or concurrent requests arrive, the system..."
                     value={userAnswer}
                     onChange={(e) => setUserAnswer(e.target.value)}
-                    className="w-full p-4 rounded-2xl bg-slate-900 border border-slate-700/80 text-slate-100 placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:border-brand-500 transition leading-relaxed"
+                    className="w-full p-3 rounded bg-[#090b12] border border-[#202538] text-steel-100 placeholder-steel-600 text-xs focus:outline-none focus:border-blue-500 transition leading-relaxed font-sans"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={!userAnswer.trim() || evaluating}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold text-xs transition shadow-lg shadow-brand-600/30 disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded btn-tactical-blue text-white font-mono text-xs font-semibold transition disabled:opacity-50"
                 >
-                  {evaluating ? <Loader2 size={16} className="animate-spin" /> : <Award size={16} />}
-                  <span>{evaluating ? 'Evaluating with Senior Staff Rubric...' : 'Submit & Grade My Answer'}</span>
+                  {evaluating ? <Loader2 size={13} className="animate-spin" /> : <Award size={13} />}
+                  <span>{evaluating ? 'SCORING_WITH_STAFF_RUBRIC...' : 'SUBMIT_FOR_RUBRIC_ASSESSMENT'}</span>
                 </button>
               </form>
 
-              {/* AI Evaluation Report Card */}
+              {/* Evaluation Report Card */}
               {evalResult && (
-                <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-slate-700/80 shadow-2xl animate-in fade-in space-y-6">
+                <div className="dev-card rounded-md p-5 sm:p-6 border border-[#242b40] shadow-2xl animate-in fade-in space-y-4 font-mono">
                   {/* Score & Verdict banner */}
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div className="flex items-center justify-between border-b border-[#181c2b] pb-3">
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        Interview Assessment
+                      <span className="text-[10px] uppercase tracking-widest text-steel-500 block">
+                        EVALUATION // REPORT
                       </span>
-                      <h4 className="text-lg font-bold text-white flex items-center gap-2 mt-0.5">
-                        Verdict:{' '}
+                      <h4 className="text-sm font-sans font-bold text-white mt-0.5">
+                        HIRING_VERDICT:{' '}
                         <span
                           className={
                             evalResult.score >= 8
-                              ? 'text-emerald-400'
+                              ? 'text-emerald-400 font-mono'
                               : evalResult.score >= 6
-                              ? 'text-amber-400'
-                              : 'text-red-400'
+                              ? 'text-amber-400 font-mono'
+                              : 'text-red-400 font-mono'
                           }
                         >
-                          {evalResult.verdict}
+                          {evalResult.verdict.toUpperCase()}
                         </span>
                       </h4>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <div className="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-300 border border-brand-500/40 flex flex-col items-center justify-center">
-                        <span className="text-lg font-extrabold leading-none">{evalResult.score}</span>
-                        <span className="text-[9px] font-mono text-slate-400">/10</span>
-                      </div>
+                    <div className="p-2 rounded bg-[#07080d] border border-[#20263c] text-center font-mono">
+                      <span className="text-base font-bold text-white">{evalResult.score}</span>
+                      <span className="text-[10px] text-steel-500">/10</span>
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed italic bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                  <p className="text-xs text-steel-300 font-sans leading-relaxed bg-[#07080d] p-3 rounded border border-[#181d2c]">
                     "{evalResult.feedback}"
                   </p>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-sans">
                     {/* Strengths */}
-                    <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/20">
-                      <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 mb-2">
-                        <ThumbsUp size={14} /> Key Strengths
+                    <div className="p-3 rounded bg-[#070d0b] border border-[#143224]">
+                      <span className="text-[11px] font-mono font-bold text-emerald-400 flex items-center gap-1.5 mb-1.5">
+                        <ThumbsUp size={12} /> VERIFIED_STRENGTHS
                       </span>
-                      <ul className="space-y-1.5 text-xs text-slate-300 list-disc list-inside">
+                      <ul className="space-y-1 text-xs text-steel-300 list-disc list-inside">
                         {evalResult.strengths?.map((s, idx) => (
                           <li key={idx}>{s}</li>
                         ))}
@@ -431,11 +427,11 @@ export default function InterviewPrep({ project }) {
                     </div>
 
                     {/* Improvements */}
-                    <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/20">
-                      <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5 mb-2">
-                        <AlertTriangle size={14} /> Room for Polish
+                    <div className="p-3 rounded bg-[#130d06] border border-[#38230e]">
+                      <span className="text-[11px] font-mono font-bold text-amber-400 flex items-center gap-1.5 mb-1.5">
+                        <AlertTriangle size={12} /> GAPS_TO_POLISH
                       </span>
-                      <ul className="space-y-1.5 text-xs text-slate-300 list-disc list-inside">
+                      <ul className="space-y-1 text-xs text-steel-300 list-disc list-inside">
                         {evalResult.improvements?.map((imp, idx) => (
                           <li key={idx}>{imp}</li>
                         ))}
@@ -445,15 +441,15 @@ export default function InterviewPrep({ project }) {
 
                   {/* Model Staff-level Answer */}
                   {evalResult.model_answer && (
-                    <div className="p-4 rounded-xl bg-slate-900/90 border border-brand-500/30">
+                    <div className="p-3.5 rounded bg-[#090b12] border border-blue-500/40 font-mono">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold text-brand-300 flex items-center gap-1.5">
-                          <Lightbulb size={14} className="text-amber-400" />
-                          Recommended Staff-Level Model Answer
+                        <span className="text-xs font-bold text-blue-300 flex items-center gap-1.5">
+                          <Lightbulb size={13} className="text-amber-400" />
+                          BENCHMARK // STAFF-LEVEL MODEL ANSWER
                         </span>
                         <VoicePlayer text={evalResult.model_answer} />
                       </div>
-                      <p className="text-xs text-slate-200 leading-relaxed font-sans">
+                      <p className="text-xs text-steel-200 font-sans leading-relaxed">
                         {evalResult.model_answer}
                       </p>
                     </div>

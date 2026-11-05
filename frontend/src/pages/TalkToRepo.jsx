@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
   Send,
-  Sparkles,
+  Terminal,
   Target,
   Search,
   Zap,
@@ -12,19 +12,20 @@ import {
   Copy,
   Check,
   RefreshCw,
-  HelpCircle,
-  Loader2
+  Loader2,
+  ChevronRight,
+  HardDrive
 } from 'lucide-react';
 import { chatApi } from '../api/client';
 import VoicePlayer from '../components/VoicePlayer';
 import CodeViewerModal from '../components/CodeViewerModal';
 
 const PRESET_PROMPTS = [
-  { label: 'Why this tech stack?', text: 'Why did I choose this specific tech stack and what were the architectural benefits?' },
-  { label: 'Hardest technical tradeoff', text: 'What was the single hardest technical challenge and architectural tradeoff in this repository?' },
-  { label: 'Walk me through data flow', text: 'Walk me through how data flows through this codebase from client request to persistence.' },
-  { label: '100x Scaling Bottleneck', text: 'If traffic to this project surges by 100x overnight, what will break first and how should I fix it?' },
-  { label: '60s STAR Elevator Pitch', text: 'Give me a 60-second elevator pitch about this project formatted for a technical interview (STAR format).' },
+  { label: 'ARCH_JUSTIFICATION', desc: 'Why this tech stack?', text: 'Why did I choose this specific tech stack and what were the architectural benefits over alternatives?' },
+  { label: 'CORE_TRADEOFF', desc: 'Hardest technical tradeoff', text: 'What was the single hardest technical challenge and architectural tradeoff in this repository?' },
+  { label: 'DATA_PIPELINE', desc: 'Walk me through data flow', text: 'Walk me through how data flows through this codebase from ingress endpoint to database persistence.' },
+  { label: 'SCALE_LIMIT', desc: '100x Scaling Bottleneck', text: 'If traffic to this project surges by 100x overnight, what will break first and how should I mitigate it?' },
+  { label: 'STAR_ELEVATOR', desc: '60s STAR Pitch', text: 'Give me a 60-second elevator pitch about this project formatted for a technical interview (STAR format).' },
 ];
 
 export default function TalkToRepo({ project }) {
@@ -32,11 +33,10 @@ export default function TalkToRepo({ project }) {
   const [currentSession, setCurrentSession] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [mode, setMode] = useState('interview_coach'); // 'interview_coach', 'code_explorer', 'quick_recall'
+  const [mode, setMode] = useState('interview_coach');
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
 
-  // Inspection modal
   const [inspectFile, setInspectFile] = useState(null);
   const [inspectLines, setInspectLines] = useState(null);
 
@@ -49,7 +49,6 @@ export default function TalkToRepo({ project }) {
   useEffect(() => {
     if (!project?.id) return;
 
-    // Load or create session
     chatApi.listSessions(project.id).then((sessList) => {
       if (sessList && sessList.length > 0) {
         setCurrentSession(sessList[0]);
@@ -95,7 +94,7 @@ export default function TalkToRepo({ project }) {
         {
           id: `err-${Date.now()}`,
           role: 'assistant',
-          content: '⚠️ Failed to reach LLM engine. Please verify your connection or settings.',
+          content: '⚠️ [ERROR: EXECUTION_HALTED] Failed to reach inference engine. Check network or keys in Settings.',
           created_at: new Date().toISOString(),
         },
       ]);
@@ -110,7 +109,7 @@ export default function TalkToRepo({ project }) {
     try {
       const sess = await chatApi.createSession({
         project_id: project.id,
-        title: `Interview Session (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
+        title: `Session [${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}]`,
         mode: mode,
       });
       setCurrentSession(sess);
@@ -133,95 +132,101 @@ export default function TalkToRepo({ project }) {
 
   if (!project) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center text-slate-400">
-        <Code size={48} className="text-slate-600 mb-3" />
-        <h3 className="text-base font-semibold text-slate-200">No Repository Selected</h3>
-        <p className="text-xs max-w-sm mt-1">Connect or select a project repository above to start chatting with your codebase.</p>
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center text-steel-500 font-mono">
+        <Terminal size={32} className="text-steel-600 mb-2" />
+        <h3 className="text-xs font-bold text-steel-300 uppercase tracking-wider">NO_ACTIVE_TARGET</h3>
+        <p className="text-[11px] max-w-sm mt-1">Mount a target repository to initiate telemetry and codebase chat.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-950 overflow-hidden relative">
-      {/* Subheader / Mode Selector */}
-      <div className="px-4 sm:px-6 py-2.5 bg-slate-900/60 border-b border-slate-800 flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-1.5 p-1 bg-slate-950/80 rounded-xl border border-slate-800">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-[#07080c] overflow-hidden relative">
+      {/* Precision Segmented Control Bar */}
+      <div className="px-4 sm:px-6 py-2 bg-[#090b12] border-b border-[#181c2b] flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-1 p-0.5 bg-[#050609] rounded border border-[#1b1f30] font-mono text-[11px]">
           <button
             onClick={() => setMode('interview_coach')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded transition ${
               mode === 'interview_coach'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#141a2e] text-blue-300 border border-blue-500/50 font-semibold'
+                : 'text-steel-500 hover:text-steel-300 border border-transparent'
             }`}
           >
-            <Target size={13} />
-            <span>Interview Grill Mode</span>
+            <Target size={12} />
+            <span>01 // GRILL_MODE</span>
           </button>
 
           <button
             onClick={() => setMode('code_explorer')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded transition ${
               mode === 'code_explorer'
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#141a2e] text-blue-300 border border-blue-500/50 font-semibold'
+                : 'text-steel-500 hover:text-steel-300 border border-transparent'
             }`}
           >
-            <Search size={13} />
-            <span>Codebase Explorer</span>
+            <Search size={12} />
+            <span>02 // CODE_EXPLORER</span>
           </button>
 
           <button
             onClick={() => setMode('quick_recall')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded transition ${
               mode === 'quick_recall'
-                ? 'bg-amber-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#1e1509] text-amber-300 border border-amber-500/50 font-semibold'
+                : 'text-steel-500 hover:text-steel-300 border border-transparent'
             }`}
           >
-            <Zap size={13} />
-            <span>Waiting-Room Recall</span>
+            <Zap size={12} />
+            <span>03 // QUICK_RECALL</span>
           </button>
         </div>
 
         <button
           onClick={handleNewSession}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition"
+          className="btn-mechanical flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-mono text-steel-400 hover:text-white transition"
         >
-          <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-          <span>New Session</span>
+          <RefreshCw size={11} className={loading ? 'animate-spin' : ''} />
+          <span>RESET_STREAM</span>
         </button>
       </div>
 
       {/* Messages Stream */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-5">
         {messages.length === 0 && (
-          <div className="max-w-2xl mx-auto text-center py-12 animate-in fade-in">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 mx-auto flex items-center justify-center text-white shadow-xl shadow-brand-600/30 mb-4">
-              <Sparkles size={28} />
+          <div className="max-w-2xl mx-auto text-center py-10 animate-in fade-in">
+            <div className="w-10 h-10 rounded-md bg-[#101422] border border-[#23293e] mx-auto flex items-center justify-center text-blue-400 mb-3 shadow-inner">
+              <Terminal size={20} />
             </div>
-            <h2 className="text-xl font-bold text-white">Talk to {project.name}</h2>
-            <p className="text-xs text-slate-400 mt-2 max-w-md mx-auto">
-              Ask anything about architecture, technical decisions, data models, or let the AI grill you with real interview questions!
+            <h2 className="text-base font-mono font-bold tracking-tight text-white uppercase">
+              Projector Runtime // {project.name}
+            </h2>
+            <p className="text-xs text-steel-400 mt-1 max-w-md mx-auto font-sans leading-relaxed">
+              Target repository AST mapped ({project.file_count} files). Drill into design choices, concurrency patterns, or trigger mock interview grilling.
             </p>
 
-            {/* Quick Suggestion Chips */}
-            <div className="mt-8 text-left">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-3 text-center">
-                Recommended Prompts for Interview Prep
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-xl mx-auto">
+            {/* Quick Suggestion Terminal Cards */}
+            <div className="mt-8 text-left font-mono">
+              <div className="flex items-center justify-between text-[10px] text-steel-500 uppercase tracking-widest mb-2.5 border-b border-[#181c2a] pb-1">
+                <span>Preset Queries // Interview Rubric</span>
+                <span>[SELECT_TO_EXEC]</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {PRESET_PROMPTS.map((p, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleSend(p.text)}
-                    className="p-3 rounded-xl glass-panel hover:border-brand-500/50 text-left transition group"
+                    className="p-2.5 rounded bg-[#090b12] hover:bg-[#101320] border border-[#1b2030] hover:border-[#2f3854] text-left transition group"
                   >
-                    <span className="text-xs font-semibold text-brand-300 group-hover:text-brand-200 block mb-1">
-                      {p.label}
-                    </span>
-                    <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
-                      "{p.text}"
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-blue-400 group-hover:text-blue-300">
+                        {p.label}
+                      </span>
+                      <ChevronRight size={12} className="text-steel-600 group-hover:text-steel-300 transition" />
+                    </div>
+                    <p className="text-[11px] font-sans text-steel-400 mt-1 line-clamp-1">
+                      {p.desc}
                     </p>
                   </button>
                 ))}
@@ -235,66 +240,70 @@ export default function TalkToRepo({ project }) {
           return (
             <div
               key={msg.id}
-              className={`flex gap-3 max-w-3xl mx-auto ${isUser ? 'justify-end' : 'justify-start'}`}
+              className={`flex flex-col max-w-3xl mx-auto ${isUser ? 'items-end' : 'items-start'}`}
             >
-              {!isUser && (
-                <div className="w-8 h-8 rounded-xl bg-brand-600/20 text-brand-400 border border-brand-500/30 flex items-center justify-center shrink-0 mt-1">
-                  <Sparkles size={16} />
-                </div>
-              )}
+              {/* Message Metadata Header */}
+              <div className="flex items-center gap-2 mb-1 px-1 font-mono text-[10px] text-steel-500">
+                <span className={isUser ? 'text-steel-400 font-bold' : 'text-blue-400 font-bold'}>
+                  {isUser ? 'DEV::INPUT' : 'SYS::SPEC_OUTPUT'}
+                </span>
+                <span>•</span>
+                <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+              </div>
 
               <div
-                className={`rounded-2xl p-4 sm:p-5 text-xs sm:text-sm leading-relaxed max-w-[88%] sm:max-w-[80%] ${
+                className={`rounded-md p-4 sm:p-5 text-xs sm:text-sm leading-relaxed max-w-full ${
                   isUser
-                    ? 'bg-brand-600 text-white rounded-br-none shadow-md shadow-brand-600/20'
-                    : 'glass-panel text-slate-200 rounded-bl-none border border-slate-800'
+                    ? 'bg-[#121626] border border-[#2563eb]/40 text-steel-100'
+                    : 'dev-card border border-[#1c2132] text-steel-200'
                 }`}
               >
-                {/* Assistant Controls Bar */}
                 {!isUser && (
-                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-3 text-slate-400 text-xs">
-                    <span className="text-[11px] font-medium text-slate-400">
-                      Project Companion
+                  <div className="flex items-center justify-between border-b border-[#181c2b] pb-2 mb-3 text-steel-500 text-[11px] font-mono">
+                    <span className="text-steel-400 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                      INFERENCE // STREAM_VERIFIED
                     </span>
                     <div className="flex items-center gap-2">
                       <VoicePlayer text={msg.content} />
                       <button
                         onClick={() => handleCopyMessage(msg.id, msg.content)}
-                        className="p-1 hover:text-white rounded transition"
+                        className="p-1 hover:text-white rounded transition text-steel-400"
                         title="Copy Response"
                       >
-                        {copiedId === msg.id ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                        {copiedId === msg.id ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
                       </button>
                     </div>
                   </div>
                 )}
 
                 {/* Markdown Body */}
-                <div className="prose prose-invert prose-xs max-w-none prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-headings:text-slate-100 prose-a:text-brand-400">
+                <div className="prose prose-invert prose-xs max-w-none prose-pre:bg-[#07080d] prose-pre:border prose-pre:border-[#1d2234] prose-headings:font-mono prose-headings:text-white prose-a:text-blue-400 font-sans">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {msg.content}
                   </ReactMarkdown>
                 </div>
 
-                {/* Code Citations Pill Shelf */}
+                {/* Code Citations Shelf */}
                 {!isUser && msg.citations && msg.citations.length > 0 && (
-                  <div className="mt-4 pt-3 border-t border-slate-800/80">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2 flex items-center gap-1.5">
-                      <FileCode size={12} className="text-brand-400" />
-                      Referenced Code Citations
-                    </span>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="mt-4 pt-3 border-t border-[#181c2b] font-mono">
+                    <div className="flex items-center justify-between text-[10px] text-steel-500 uppercase tracking-widest mb-1.5">
+                      <span className="flex items-center gap-1">
+                        <FileCode size={11} className="text-blue-400" />
+                        Referenced AST Citations
+                      </span>
+                      <span>[{msg.citations.length}]</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
                       {msg.citations.map((c, i) => (
                         <button
                           key={i}
                           onClick={() => openCitation(c.file, c.line_start, c.line_end)}
-                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-brand-300 border border-slate-800 text-[11px] font-mono transition"
+                          className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#07080d] hover:bg-[#121626] text-blue-300 border border-[#1e2436] hover:border-blue-500/50 text-[10px] transition"
                         >
                           <span>{c.file}</span>
                           {c.line_start && (
-                            <span className="text-slate-400 text-[10px]">
-                              :{c.line_start}
-                            </span>
+                            <span className="text-steel-500">:{c.line_start}</span>
                           )}
                         </button>
                       ))}
@@ -307,15 +316,13 @@ export default function TalkToRepo({ project }) {
         })}
 
         {loading && (
-          <div className="flex gap-3 max-w-3xl mx-auto justify-start animate-pulse">
-            <div className="w-8 h-8 rounded-xl bg-brand-600/20 text-brand-400 border border-brand-500/30 flex items-center justify-center shrink-0">
-              <Loader2 size={16} className="animate-spin" />
+          <div className="flex flex-col max-w-3xl mx-auto items-start">
+            <div className="px-1 text-[10px] font-mono text-steel-500 mb-1">
+              SYS::PROCESSING
             </div>
-            <div className="glass-panel p-4 rounded-2xl rounded-bl-none text-xs text-slate-400 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce"></span>
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce [animation-delay:0.2s]"></span>
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce [animation-delay:0.4s]"></span>
-              <span className="ml-2 font-mono text-[11px]">Searching repository & reasoning...</span>
+            <div className="dev-card p-3 rounded-md text-xs font-mono text-steel-400 flex items-center gap-2 border border-[#1f2538]">
+              <Loader2 size={13} className="animate-spin text-blue-400" />
+              <span>Scanning AST & calculating cross-references...</span>
             </div>
           </div>
         )}
@@ -323,33 +330,36 @@ export default function TalkToRepo({ project }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Bar */}
-      <div className="p-4 sm:p-6 bg-slate-950/90 border-t border-slate-800/80">
+      {/* Terminal Input Bar */}
+      <div className="p-3 sm:p-4 bg-[#07080c] border-t border-[#181c2b]">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSend();
           }}
-          className="max-w-3xl mx-auto relative flex items-center"
+          className="max-w-3xl mx-auto relative flex items-center font-mono"
         >
+          <div className="absolute left-3 text-steel-500 text-xs select-none">
+            &gt;
+          </div>
           <input
             type="text"
             placeholder={
               mode === 'interview_coach'
-                ? 'Ask or say "Grill me on scaling bottlenecks"...'
-                : 'Ask anything about code, functions, or dependencies...'
+                ? 'Type prompt or "Grill me on scaling bottlenecks"...'
+                : 'Query AST for algorithms, routes, schemas...'
             }
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={loading}
-            className="w-full pl-4 pr-12 py-3 rounded-2xl bg-slate-900 border border-slate-700/80 text-slate-100 placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:border-brand-500 transition shadow-inner"
+            className="w-full pl-7 pr-12 py-2.5 rounded bg-[#0d0f17] border border-[#202538] text-steel-100 placeholder-steel-600 text-xs focus:outline-none focus:border-blue-500 transition font-mono"
           />
           <button
             type="submit"
             disabled={!input.trim() || loading}
-            className="absolute right-2 p-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white transition disabled:opacity-40 disabled:hover:bg-brand-600 shadow-md shadow-brand-600/20"
+            className="absolute right-1.5 p-1.5 rounded btn-tactical-blue text-white transition disabled:opacity-30"
           >
-            <Send size={16} />
+            <Send size={13} />
           </button>
         </form>
       </div>

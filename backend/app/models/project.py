@@ -84,3 +84,4 @@ class Flashcard(Base):
     created_at = Column(DateTime, default=get_utc_now)
 
     project = relationship("Project", back_populates="flashcards")
+

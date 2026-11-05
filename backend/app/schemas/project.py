@@ -133,3 +133,4 @@ class SettingsConfig(BaseModel):
     openai_api_key: Optional[str] = None
     default_provider: Optional[str] = "gemini"
     github_token: Optional[str] = None
+

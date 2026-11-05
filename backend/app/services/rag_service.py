@@ -132,3 +132,4 @@ class RAGService:
                 except Exception:
                     pass
         return chunks[:4]
+

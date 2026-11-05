@@ -133,3 +133,4 @@ Return ONLY a valid JSON object with keys:
             ],
             "model_answer": f"In {project_name}, we addressed this by decoupling core logic from transport layers, ensuring that failures are isolated. For example, by utilizing schema validation and async processing, we prevent bottlenecks while maintaining clear boundaries."
         }
+

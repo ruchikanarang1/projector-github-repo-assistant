@@ -3,14 +3,12 @@ import {
   Settings as SettingsIcon,
   Key,
   Github,
-  Database,
   Cpu,
   Check,
   Save,
-  AlertCircle,
-  ExternalLink,
-  ShieldCheck,
-  Server
+  AlertTriangle,
+  Server,
+  HardDrive
 } from 'lucide-react';
 import { settingsApi } from '../api/client';
 
@@ -45,62 +43,66 @@ export default function Settings() {
         github_token: githubToken.trim() || undefined,
         openai_api_key: openaiKey.trim() || undefined,
       });
-      setStatusMsg({ type: 'success', text: 'Settings updated successfully!' });
+      setStatusMsg({ type: 'success', text: 'SETTINGS_COMMITTED // Runtime updated.' });
       setGeminiKey('');
       setGithubToken('');
       setOpenaiKey('');
       loadSettings();
     } catch (err) {
-      setStatusMsg({ type: 'error', text: 'Failed to update settings.' });
+      setStatusMsg({ type: 'error', text: 'UPDATE_FAILED // Could not write configuration.' });
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 sm:p-10 bg-slate-950">
-      <div className="max-w-2xl mx-auto space-y-8">
+    <div className="flex-1 overflow-y-auto p-5 sm:p-8 bg-[#07080c] font-mono">
+      <div className="max-w-2xl mx-auto space-y-6">
         {/* Title */}
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
-            <span className="p-2 rounded-xl bg-brand-500/20 text-brand-400">
-              <SettingsIcon size={20} />
-            </span>
-            App Settings & AI Configuration
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Configure your AI keys, GitHub access tokens, and view system status.
+          <div className="flex items-center gap-2">
+            <span className="text-blue-400 font-bold text-xs uppercase tracking-wider">CONFIG_RUNTIME</span>
+            <span className="text-steel-600">//</span>
+            <span className="text-white text-xs font-semibold">PARAMETERS & TELEMETRY</span>
+          </div>
+          <p className="text-[11px] text-steel-500 mt-1 font-sans">
+            Configure inference credentials, GitHub tokens, and inspect system telemetry.
           </p>
         </div>
 
         {statusMsg && (
           <div
-            className={`p-4 rounded-xl text-xs flex items-center gap-2 ${
+            className={`p-3 rounded text-xs font-mono flex items-center gap-2 border ${
               statusMsg.type === 'success'
-                ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
-                : 'bg-red-500/10 text-red-300 border border-red-500/30'
+                ? 'bg-[#091510] text-emerald-300 border-[#143d2c]'
+                : 'bg-[#180a0a] text-red-300 border-[#3e1414]'
             }`}
           >
-            {statusMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
+            {statusMsg.type === 'success' ? <Check size={14} /> : <AlertTriangle size={14} />}
             <span>{statusMsg.text}</span>
           </div>
         )}
 
-        {/* API Keys Configuration Form */}
-        <form onSubmit={handleSave} className="glass-panel rounded-2xl p-6 sm:p-8 border border-slate-800 space-y-6">
-          <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2 border-b border-slate-800 pb-3">
-            <Key size={16} className="text-brand-400" />
-            API Credentials
-          </h3>
+        {/* Credentials Form */}
+        <form onSubmit={handleSave} className="dev-card rounded-md p-5 sm:p-6 border border-[#1b2030] space-y-4">
+          <div className="flex items-center justify-between border-b border-[#181c2b] pb-2.5">
+            <div className="flex items-center gap-2">
+              <Key size={14} className="text-blue-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-white">
+                API Credentials
+              </span>
+            </div>
+            <span className="text-[10px] text-steel-500">INJECTED_ENV</span>
+          </div>
 
-          {/* Gemini API Key */}
+          {/* Gemini Key */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-semibold text-slate-200">
+              <label className="text-[11px] uppercase tracking-wider text-steel-400">
                 Google Gemini API Key
               </label>
-              <span className="text-[11px] text-slate-400">
-                Current: <span className="font-mono text-brand-300">{config?.gemini_key_masked || 'Not Set'}</span>
+              <span className="text-[10px] text-steel-500">
+                STATUS: <span className="text-blue-400 font-bold">{config?.gemini_key_masked || 'NOT_SET'}</span>
               </span>
             </div>
             <input
@@ -108,21 +110,21 @@ export default function Settings() {
               placeholder="Paste new Gemini API Key (e.g. AIzaSy...)"
               value={geminiKey}
               onChange={(e) => setGeminiKey(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-500"
+              className="w-full px-3 py-1.5 rounded bg-[#090b12] border border-[#202538] text-xs text-steel-100 placeholder-steel-600 focus:outline-none focus:border-blue-500 font-mono"
             />
-            <p className="text-[11px] text-slate-400 mt-1">
-              Powers deep repo synthesis and interview chat. Free tier available on Google AI Studio.
+            <p className="text-[10px] text-steel-500 mt-1 font-sans">
+              Powers large-context repo synthesis. Defaults to built-in smart heuristic engine when omitted.
             </p>
           </div>
 
-          {/* GitHub Personal Access Token */}
+          {/* GitHub Token */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-                <Github size={13} /> GitHub Personal Access Token (PAT)
+              <label className="text-[11px] uppercase tracking-wider text-steel-400 flex items-center gap-1.5">
+                <Github size={11} /> GitHub Personal Access Token (PAT)
               </label>
-              <span className="text-[11px] text-slate-400">
-                Current: <span className="font-mono text-brand-300">{config?.github_token_masked || 'Not Set'}</span>
+              <span className="text-[10px] text-steel-500">
+                STATUS: <span className="text-blue-400 font-bold">{config?.github_token_masked || 'NOT_SET'}</span>
               </span>
             </div>
             <input
@@ -130,53 +132,62 @@ export default function Settings() {
               placeholder="ghp_xxxx or github_pat_xxxx"
               value={githubToken}
               onChange={(e) => setGithubToken(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-500"
+              className="w-full px-3 py-1.5 rounded bg-[#090b12] border border-[#202538] text-xs text-steel-100 placeholder-steel-600 focus:outline-none focus:border-blue-500 font-mono"
             />
-            <p className="text-[11px] text-slate-400 mt-1">
-              Optional: Grants higher API rate limits and allows downloading private repos.
+            <p className="text-[10px] text-steel-500 mt-1 font-sans">
+              Increases GitHub API rate limit from 60 req/hr to 5,000 req/hr and unlocks private repo cloning.
             </p>
           </div>
 
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition shadow-md shadow-brand-600/20"
+            className="flex items-center justify-center gap-2 py-2 px-4 rounded btn-tactical-blue text-white text-xs font-semibold transition disabled:opacity-50"
           >
-            <Save size={15} />
-            <span>{saving ? 'Saving...' : 'Save Configuration'}</span>
+            <Save size={13} />
+            <span>{saving ? 'WRITING...' : 'SAVE_CONFIGURATION'}</span>
           </button>
         </form>
 
-        {/* System & Runtime Diagnostic Card */}
-        <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-slate-800 space-y-4">
-          <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2 border-b border-slate-800 pb-3">
-            <Cpu size={16} className="text-emerald-400" />
-            Runtime Environment & Deployment
-          </h3>
+        {/* Runtime Diagnostics Card */}
+        <div className="dev-card rounded-md p-5 sm:p-6 border border-[#1b2030] space-y-3 font-mono">
+          <div className="flex items-center justify-between border-b border-[#181c2b] pb-2">
+            <div className="flex items-center gap-2">
+              <Cpu size={14} className="text-emerald-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-white">
+                Runtime Diagnostics
+              </span>
+            </div>
+            <span className="text-[10px] text-emerald-400 font-bold">ONLINE</span>
+          </div>
 
-          <div className="grid grid-cols-2 gap-4 text-xs">
-            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-              <span className="text-slate-400 block text-[10px] uppercase font-semibold">Active Engine</span>
-              <span className="font-bold text-slate-200 mt-0.5 block">
-                {config?.gemini_configured ? config.gemini_model : 'Smart Heuristic Engine'}
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="p-2.5 rounded bg-[#090b12] border border-[#191d2c]">
+              <span className="text-steel-500 block text-[9px] uppercase">Active Inference Engine</span>
+              <span className="font-bold text-steel-200 mt-0.5 block text-[11px]">
+                {config?.gemini_configured ? config.gemini_model : 'Smart Heuristic AST Engine'}
               </span>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-              <span className="text-slate-400 block text-[10px] uppercase font-semibold">Database Engine</span>
-              <span className="font-bold text-slate-200 mt-0.5 block">
+            <div className="p-2.5 rounded bg-[#090b12] border border-[#191d2c]">
+              <span className="text-steel-500 block text-[9px] uppercase">Database Engine</span>
+              <span className="font-bold text-steel-200 mt-0.5 block text-[11px]">
                 {config?.database_type || 'SQLite'} (Zero-Setup)
               </span>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-              <span className="text-slate-400 block text-[10px] uppercase font-semibold">PWA Offline Mode</span>
-              <span className="font-bold text-emerald-400 mt-0.5 block">Enabled</span>
+            <div className="p-2.5 rounded bg-[#090b12] border border-[#191d2c]">
+              <span className="text-steel-500 block text-[9px] uppercase">PWA Offline Precache</span>
+              <span className="font-bold text-emerald-400 mt-0.5 block text-[11px]">
+                Workbox // ACTIVE
+              </span>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-              <span className="text-slate-400 block text-[10px] uppercase font-semibold">Docker Support</span>
-              <span className="font-bold text-slate-200 mt-0.5 block">Ready for Publish</span>
+            <div className="p-2.5 rounded bg-[#090b12] border border-[#191d2c]">
+              <span className="text-steel-500 block text-[9px] uppercase">Container Packaging</span>
+              <span className="font-bold text-steel-200 mt-0.5 block text-[11px]">
+                Docker Compose Ready
+              </span>
             </div>
           </div>
         </div>

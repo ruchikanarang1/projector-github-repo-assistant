@@ -12,20 +12,20 @@ import {
   Copy,
   Check,
   RefreshCw,
-  Sparkles,
   Loader2,
-  Share2
+  Terminal,
+  Compass
 } from 'lucide-react';
 import { docApi } from '../api/client';
 import MermaidViewer from '../components/MermaidViewer';
 
 const DOC_TABS = [
-  { id: 'architecture', label: 'Architecture & Design', icon: GitBranch },
-  { id: 'mermaid_flows', label: 'Mermaid Diagrams', icon: Sparkles },
-  { id: 'modules', label: 'Modules Guide', icon: FolderTree },
-  { id: 'tradeoffs', label: 'Decisions & Tradeoffs', icon: Scale },
-  { id: 'interview_cheatsheet', label: 'Interview Cheatsheet', icon: GraduationCap },
-  { id: 'api_specs', label: 'API & Data Specs', icon: FileCode },
+  { id: 'architecture', code: '01', label: 'Architecture & Design', icon: GitBranch },
+  { id: 'mermaid_flows', code: '02', label: 'Mermaid Diagrams', icon: Compass },
+  { id: 'modules', code: '03', label: 'Modules Breakdown', icon: FolderTree },
+  { id: 'tradeoffs', code: '04', label: 'Decisions & Tradeoffs', icon: Scale },
+  { id: 'interview_cheatsheet', code: '05', label: 'STAR Cheatsheet', icon: GraduationCap },
+  { id: 'api_specs', code: '06', label: 'API & Data Contracts', icon: FileCode },
 ];
 
 export default function Documentation({ project }) {
@@ -84,7 +84,6 @@ export default function Documentation({ project }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Extract mermaid diagrams if present in markdown
   const extractMermaidBlocks = (text) => {
     if (!text) return [];
     const regex = /```mermaid([\s\S]*?)```/g;
@@ -100,27 +99,26 @@ export default function Documentation({ project }) {
 
   if (!project) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center text-slate-400">
-        <FileText size={48} className="text-slate-600 mb-3" />
-        <h3 className="text-base font-semibold text-slate-200">No Repository Selected</h3>
-        <p className="text-xs max-w-sm mt-1">Select a project repository above to view and generate documentation.</p>
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center text-steel-500 font-mono">
+        <FileText size={32} className="text-steel-600 mb-2" />
+        <h3 className="text-xs font-bold text-steel-300 uppercase tracking-wider">NO_TARGET_REPOSITORY</h3>
+        <p className="text-[11px] max-w-sm mt-1">Mount a target codebase to generate structural documentation & Mermaid blueprints.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-950 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-[#07080c] overflow-hidden">
       {/* Top Action Bar */}
-      <div className="px-6 py-3 bg-slate-900/60 border-b border-slate-800 flex items-center justify-between gap-4 flex-wrap">
+      <div className="px-5 py-2.5 bg-[#090b12] border-b border-[#181c2b] flex items-center justify-between gap-3 flex-wrap font-mono">
         <div>
-          <h2 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-            <span className="p-1 rounded-md bg-brand-500/20 text-brand-400">
-              <FileText size={16} />
-            </span>
-            Documentation Studio: {project.name}
-          </h2>
-          <p className="text-[11px] text-slate-400">
-            Export-ready architectural analysis, Mermaid diagrams, and interview prep dossiers.
+          <div className="flex items-center gap-2">
+            <span className="text-blue-400 font-bold text-xs uppercase tracking-wider">DOC_STUDIO</span>
+            <span className="text-steel-600">//</span>
+            <span className="text-white text-xs font-sans font-semibold">{project.name}</span>
+          </div>
+          <p className="text-[10px] text-steel-500">
+            Export-grade architectural blueprints, data flow diagrams & interview packs.
           </p>
         </div>
 
@@ -129,30 +127,30 @@ export default function Documentation({ project }) {
           <a
             href={docApi.exportZipUrl(project.id)}
             download
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition"
+            className="btn-mechanical flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] text-steel-300 hover:text-white transition"
           >
-            <Download size={13} />
-            <span>Export All (.zip)</span>
+            <Download size={12} />
+            <span>EXPORT_ZIP</span>
           </a>
 
           {/* Generate All */}
           <button
             onClick={() => handleGenerate('all')}
             disabled={generatingTab !== null}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-md shadow-brand-600/20 transition disabled:opacity-50"
+            className="btn-tactical-blue flex items-center gap-1.5 px-3 py-1 rounded text-white text-[11px] font-semibold transition disabled:opacity-50"
           >
             {generatingTab === 'all' ? (
-              <Loader2 size={13} className="animate-spin" />
+              <Loader2 size={12} className="animate-spin" />
             ) : (
-              <Sparkles size={13} />
+              <Terminal size={12} />
             )}
-            <span>{generatingTab === 'all' ? 'Generating Suite...' : 'Generate All Docs'}</span>
+            <span>{generatingTab === 'all' ? 'COMPILING_SUITE...' : 'GENERATE_ALL_DOCS'}</span>
           </button>
         </div>
       </div>
 
       {/* Document Category Tabs */}
-      <div className="flex border-b border-slate-800 bg-slate-900/40 px-6 overflow-x-auto scrollbar-none">
+      <div className="flex border-b border-[#181c2b] bg-[#07080d] px-5 overflow-x-auto scrollbar-none font-mono">
         {DOC_TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -162,14 +160,17 @@ export default function Documentation({ project }) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold border-b-2 whitespace-nowrap transition ${
+              className={`flex items-center gap-2 px-3 py-2 text-xs border-b-2 whitespace-nowrap transition ${
                 isActive
-                  ? 'border-brand-500 text-brand-400 bg-slate-800/40'
-                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                  ? 'border-blue-500 text-blue-400 bg-[#101422] font-semibold'
+                  : 'border-transparent text-steel-500 hover:text-steel-300 hover:bg-[#0c0e16]'
               }`}
             >
-              <Icon size={14} />
-              <span>{tab.label}</span>
+              <span className={`text-[10px] ${isActive ? 'text-blue-400' : 'text-steel-600'}`}>
+                {tab.code}
+              </span>
+              <Icon size={13} />
+              <span className="font-sans text-[12px]">{tab.label}</span>
               {hasContent && (
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
               )}
@@ -179,91 +180,93 @@ export default function Documentation({ project }) {
       </div>
 
       {/* Document Content View */}
-      <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+      <div className="flex-1 overflow-y-auto p-5 sm:p-8">
         <div className="max-w-4xl mx-auto">
           {currentDoc ? (
-            <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-slate-800/80 shadow-xl">
+            <div className="dev-card rounded-md p-6 sm:p-8 border border-[#1b2030]">
               {/* Doc Title & Toolbar */}
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+              <div className="flex items-center justify-between border-b border-[#181c2b] pb-3 mb-6 font-mono">
                 <div>
-                  <h3 className="text-lg font-bold text-white">{currentDoc.title}</h3>
-                  <span className="text-[11px] text-slate-400">
-                    Last updated {new Date(currentDoc.updated_at).toLocaleDateString()}
+                  <div className="text-[10px] text-blue-400 uppercase tracking-widest">SPECIFICATION_FILE</div>
+                  <h3 className="text-base font-bold text-white font-sans mt-0.5">{currentDoc.title}</h3>
+                  <span className="text-[10px] text-steel-500">
+                    LAST_SYNC: {new Date(currentDoc.updated_at).toLocaleDateString()}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <button
                     onClick={handleCopy}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition"
+                    className="btn-mechanical flex items-center gap-1 px-2.5 py-1 rounded text-steel-300 text-[11px] transition"
                   >
-                    {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-                    <span>{copied ? 'Copied' : 'Copy Markdown'}</span>
+                    {copied ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                    <span>{copied ? 'COPIED' : 'COPY_MD'}</span>
                   </button>
 
                   <button
                     onClick={() => handleGenerate(activeTab)}
                     disabled={generatingTab !== null}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition disabled:opacity-50"
+                    className="btn-mechanical flex items-center gap-1 px-2.5 py-1 rounded text-steel-300 text-[11px] transition disabled:opacity-50"
                   >
                     <RefreshCw
-                      size={13}
+                      size={11}
                       className={generatingTab === activeTab ? 'animate-spin' : ''}
                     />
-                    <span>Regenerate</span>
+                    <span>RECOMPILE</span>
                   </button>
                 </div>
               </div>
 
-              {/* Render Mermaid Diagrams if in mermaid tab or if diagrams detected */}
+              {/* Render Mermaid Diagrams if present */}
               {mermaidCharts.length > 0 && (
-                <div className="mb-8 space-y-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-brand-400 block">
-                    Interactive Visual Architecture
-                  </span>
+                <div className="mb-6 space-y-3 font-mono">
+                  <div className="text-[10px] uppercase tracking-widest text-steel-500 flex items-center justify-between border-b border-[#181c2b] pb-1">
+                    <span>Visual Architecture Schematics</span>
+                    <span>[{mermaidCharts.length}]</span>
+                  </div>
                   {mermaidCharts.map((chart, idx) => (
                     <MermaidViewer
                       key={idx}
                       chartCode={chart}
-                      title={`Architecture Diagram ${idx + 1}`}
+                      title={`SCHEMATIC_0${idx + 1}`}
                     />
                   ))}
                 </div>
               )}
 
               {/* Render Markdown Content */}
-              <div className="prose prose-invert prose-sm max-w-none prose-headings:text-slate-100 prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-table:border-slate-800">
+              <div className="prose prose-invert prose-sm max-w-none prose-headings:font-mono prose-headings:text-white prose-pre:bg-[#07080d] prose-pre:border prose-pre:border-[#1d2234] prose-table:border-[#1e2336] font-sans">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {currentDoc.content}
                 </ReactMarkdown>
               </div>
             </div>
           ) : (
-            <div className="glass-panel rounded-2xl p-12 text-center border border-slate-800/80 my-8">
-              <div className="w-12 h-12 rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20 mx-auto flex items-center justify-center mb-3">
-                <Sparkles size={24} />
+            <div className="dev-card rounded-md p-10 text-center border border-[#1b2030] my-6 font-mono">
+              <div className="w-10 h-10 rounded bg-[#101422] text-blue-400 border border-[#20273c] mx-auto flex items-center justify-center mb-3">
+                <FileText size={18} />
               </div>
-              <h3 className="text-base font-bold text-white">
-                {DOC_TABS.find((t) => t.id === activeTab)?.label} Not Generated Yet
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                DOCUMENT_NOT_COMPILED // {DOC_TABS.find((t) => t.id === activeTab)?.code}
               </h3>
-              <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
-                Generate this document to get deep architectural breakdowns, Mermaid diagrams, and interview talking points tailored to this repository.
+              <p className="text-xs text-steel-400 mt-1 max-w-md mx-auto font-sans leading-relaxed">
+                Compile this specification to extract AST relationships, component boundaries, and interview answers.
               </p>
 
               <button
                 onClick={() => handleGenerate(activeTab)}
                 disabled={generatingTab !== null}
-                className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition shadow-lg shadow-brand-600/30 disabled:opacity-50"
+                className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded btn-tactical-blue text-white text-xs font-semibold transition disabled:opacity-50"
               >
                 {generatingTab === activeTab ? (
-                  <Loader2 size={15} className="animate-spin" />
+                  <Loader2 size={13} className="animate-spin" />
                 ) : (
-                  <Sparkles size={15} />
+                  <Terminal size={13} />
                 )}
                 <span>
                   {generatingTab === activeTab
-                    ? 'Analyzing Codebase & Writing...'
-                    : `Generate ${DOC_TABS.find((t) => t.id === activeTab)?.label}`}
+                    ? 'COMPILING_ANALYSIS...'
+                    : `COMPILE_${DOC_TABS.find((t) => t.id === activeTab)?.id.toUpperCase()}`}
                 </span>
               </button>
             </div>

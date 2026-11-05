@@ -221,3 +221,4 @@ class RepoAnalyzer:
                     detected.add(name)
 
         return sorted(list(detected))
+

@@ -130,3 +130,4 @@ class LLMService:
             "Would you like to explore the specific data models, trace an API route, or run a mock interview question on this component?\n\n"
             "> ⚡ *Connect your Gemini API Key in Settings to unlock deep live reasoning over entire codebases!*"
         )
+

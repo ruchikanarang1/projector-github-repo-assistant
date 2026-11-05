@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Play, Pause } from 'lucide-react';
+import { Volume2, Pause } from 'lucide-react';
 
 export default function VoicePlayer({ text }) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -18,8 +18,7 @@ export default function VoicePlayer({ text }) {
       window.speechSynthesis.cancel();
       setIsPlaying(false);
     } else {
-      window.speechSynthesis.cancel(); // clear previous
-      // Strip markdown syntax for natural speech
+      window.speechSynthesis.cancel();
       const cleanText = text
         .replace(/```[\s\S]*?```/g, 'Code block omitted.')
         .replace(/[#*`_~\[\]]/g, '')
@@ -41,15 +40,15 @@ export default function VoicePlayer({ text }) {
   return (
     <button
       onClick={handleToggle}
-      className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full border transition ${
+      className={`flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-mono rounded border transition ${
         isPlaying
-          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
-          : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700'
+          ? 'bg-[#1e1509] text-amber-300 border-[#472f10]'
+          : 'bg-[#0f121d] text-steel-400 border-[#20273a] hover:text-white hover:bg-[#161a29]'
       }`}
-      title={isPlaying ? 'Pause narration' : 'Listen to explanation'}
+      title={isPlaying ? 'Pause speech output' : 'Audio stream synthesis'}
     >
-      {isPlaying ? <Pause size={12} /> : <Volume2 size={12} />}
-      <span>{isPlaying ? 'Playing Audio' : 'Listen'}</span>
+      {isPlaying ? <Pause size={10} /> : <Volume2 size={10} />}
+      <span>{isPlaying ? 'AUDIO::PLAYING' : 'AUDIO_OUT'}</span>
     </button>
   );
 }

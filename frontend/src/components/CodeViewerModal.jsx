@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Copy, Check, FileCode, ExternalLink } from 'lucide-react';
+import { X, Copy, Check, FileCode, Terminal } from 'lucide-react';
 import { projectApi } from '../api/client';
 
 export default function CodeViewerModal({ projectId, filePath, lineHighlight, onClose }) {
@@ -30,25 +30,27 @@ export default function CodeViewerModal({ projectId, filePath, lineHighlight, on
   const lines = fileData?.content ? fileData.content.split('\n') : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-      <div className="glass-panel w-full max-w-4xl h-[85vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-slate-700/80">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-slate-900/90 border-b border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in">
+      <div className="w-full max-w-4xl h-[85vh] bg-[#07080d] border border-[#23283c] rounded-lg flex flex-col shadow-2xl overflow-hidden text-steel-200 font-mono">
+        {/* Terminal Header */}
+        <div className="flex items-center justify-between px-5 py-3 bg-[#0d0f17] border-b border-[#1b2030]">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-brand-500/10 text-brand-400 border border-brand-500/20">
-              <FileCode size={18} />
+            <div className="p-1 rounded bg-[#141826] border border-[#222a40] text-blue-400">
+              <FileCode size={15} />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-                {filePath}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white tracking-tight">
+                  {filePath}
+                </span>
                 {lineHighlight && (
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    Lines {lineHighlight.start}-{lineHighlight.end || lineHighlight.start}
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-950/80 text-amber-300 border border-amber-800">
+                    L:{lineHighlight.start}-{lineHighlight.end || lineHighlight.start}
                   </span>
                 )}
-              </h3>
-              <p className="text-xs text-slate-400">
-                {fileData?.language || 'Code'} • {fileData ? `${lines.length} lines` : 'Loading...'}
+              </div>
+              <p className="text-[10px] text-steel-500">
+                {fileData?.language?.toUpperCase() || 'SOURCE'} • {lines.length} LINES • {fileData ? `${fileData.size}B` : 'LOADING'}
               </p>
             </div>
           </div>
@@ -57,28 +59,28 @@ export default function CodeViewerModal({ projectId, filePath, lineHighlight, on
             <button
               onClick={handleCopy}
               disabled={!fileData?.content}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs rounded bg-[#131724] border border-[#222a40] text-steel-300 hover:text-white hover:bg-[#1a2032] transition"
             >
-              {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-              <span>{copied ? 'Copied' : 'Copy All'}</span>
+              {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+              <span>{copied ? 'COPIED' : 'COPY_ALL'}</span>
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+              className="p-1 text-steel-500 hover:text-white hover:bg-[#181d2c] rounded transition"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
         </div>
 
         {/* Code Content */}
-        <div className="flex-1 overflow-auto p-4 bg-slate-950 font-mono text-xs leading-relaxed">
+        <div className="flex-1 overflow-auto p-3 bg-[#07080d] text-xs leading-relaxed">
           {loading ? (
-            <div className="flex items-center justify-center h-full text-slate-500">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
+            <div className="flex items-center justify-center h-full text-steel-500">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
             </div>
           ) : (
-            <div className="table w-full">
+            <div className="table w-full select-text">
               {lines.map((line, idx) => {
                 const lineNum = idx + 1;
                 const isHighlighted =
@@ -90,13 +92,13 @@ export default function CodeViewerModal({ projectId, filePath, lineHighlight, on
                   <div
                     key={idx}
                     className={`table-row ${
-                      isHighlighted ? 'bg-brand-500/20 text-brand-100 font-medium' : 'hover:bg-slate-900/60'
+                      isHighlighted ? 'bg-blue-950/40 text-blue-200 font-semibold' : 'hover:bg-[#0f121d]'
                     }`}
                   >
-                    <span className="table-cell select-none text-right pr-4 pl-2 py-0.5 text-slate-600 border-r border-slate-800/80 w-12 font-mono">
+                    <span className="table-cell select-none text-right pr-4 pl-2 py-0.5 text-steel-600 border-r border-[#191d2c] w-12 font-mono text-[11px]">
                       {lineNum}
                     </span>
-                    <span className="table-cell pl-4 pr-2 py-0.5 whitespace-pre font-mono text-slate-300">
+                    <span className="table-cell pl-4 pr-2 py-0.5 whitespace-pre font-mono text-steel-300">
                       {line || ' '}
                     </span>
                   </div>

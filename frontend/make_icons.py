@@ -40,3 +40,4 @@ def create_png(width, height, path):
 
 create_png(192, 192, "frontend/public/icon-192.png")
 create_png(512, 512, "frontend/public/icon-512.png")
+

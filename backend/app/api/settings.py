@@ -53,3 +53,4 @@ async def update_system_settings(req: UpdateSettingsRequest):
         "gemini_configured": bool(settings.GEMINI_API_KEY),
         "github_token_configured": bool(settings.GITHUB_TOKEN)
     }
+
